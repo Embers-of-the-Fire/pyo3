@@ -2,7 +2,7 @@
 use crate::Py_hash_t;
 use crate::{PyObject, Py_UCS1, Py_UCS2, Py_UCS4, Py_ssize_t};
 use libc::wchar_t;
-use std::ffi::{c_char, c_int, c_uint, c_void};
+use std::ffi;
 
 // skipped Py_UNICODE_ISSPACE()
 // skipped Py_UNICODE_ISLOWER()
@@ -168,12 +168,12 @@ struct PyASCIIObjectState {
     bitfield: BitfieldUnit<[u8; 4usize]>,
 }
 
-// c_uint and u32 are not necessarily the same type on all targets / architectures
+// ffi::c_uint and u32 are not necessarily the same type on all targets / architectures
 #[cfg(not(any(GraalPy, Py_3_14)))]
 #[allow(clippy::useless_transmute)]
 impl PyASCIIObjectState {
     #[inline]
-    unsafe fn interned(&self) -> c_uint {
+    unsafe fn interned(&self) -> ffi::c_uint {
         std::mem::transmute(
             self.bitfield
                 .get(STATE_INTERNED_INDEX, STATE_INTERNED_WIDTH) as u32,
@@ -181,43 +181,43 @@ impl PyASCIIObjectState {
     }
 
     #[inline]
-    unsafe fn set_interned(&mut self, val: c_uint) {
+    unsafe fn set_interned(&mut self, val: ffi::c_uint) {
         let val: u32 = std::mem::transmute(val);
         self.bitfield
             .set(STATE_INTERNED_INDEX, STATE_INTERNED_WIDTH, val as u64)
     }
 
     #[inline]
-    unsafe fn kind(&self) -> c_uint {
+    unsafe fn kind(&self) -> ffi::c_uint {
         std::mem::transmute(self.bitfield.get(STATE_KIND_INDEX, STATE_KIND_WIDTH) as u32)
     }
 
     #[inline]
-    unsafe fn set_kind(&mut self, val: c_uint) {
+    unsafe fn set_kind(&mut self, val: ffi::c_uint) {
         let val: u32 = std::mem::transmute(val);
         self.bitfield
             .set(STATE_KIND_INDEX, STATE_KIND_WIDTH, val as u64)
     }
 
     #[inline]
-    unsafe fn compact(&self) -> c_uint {
+    unsafe fn compact(&self) -> ffi::c_uint {
         std::mem::transmute(self.bitfield.get(STATE_COMPACT_INDEX, STATE_COMPACT_WIDTH) as u32)
     }
 
     #[inline]
-    unsafe fn set_compact(&mut self, val: c_uint) {
+    unsafe fn set_compact(&mut self, val: ffi::c_uint) {
         let val: u32 = std::mem::transmute(val);
         self.bitfield
             .set(STATE_COMPACT_INDEX, STATE_COMPACT_WIDTH, val as u64)
     }
 
     #[inline]
-    unsafe fn ascii(&self) -> c_uint {
+    unsafe fn ascii(&self) -> ffi::c_uint {
         std::mem::transmute(self.bitfield.get(STATE_ASCII_INDEX, STATE_ASCII_WIDTH) as u32)
     }
 
     #[inline]
-    unsafe fn set_ascii(&mut self, val: c_uint) {
+    unsafe fn set_ascii(&mut self, val: ffi::c_uint) {
         let val: u32 = std::mem::transmute(val);
         self.bitfield
             .set(STATE_ASCII_INDEX, STATE_ASCII_WIDTH, val as u64)
@@ -225,7 +225,7 @@ impl PyASCIIObjectState {
 
     #[cfg(Py_3_12)]
     #[inline]
-    unsafe fn statically_allocated(&self) -> c_uint {
+    unsafe fn statically_allocated(&self) -> ffi::c_uint {
         std::mem::transmute(self.bitfield.get(
             STATE_STATICALLY_ALLOCATED_INDEX,
             STATE_STATICALLY_ALLOCATED_WIDTH,
@@ -234,7 +234,7 @@ impl PyASCIIObjectState {
 
     #[cfg(Py_3_12)]
     #[inline]
-    unsafe fn set_statically_allocated(&mut self, val: c_uint) {
+    unsafe fn set_statically_allocated(&mut self, val: ffi::c_uint) {
         let val: u32 = std::mem::transmute(val);
         self.bitfield.set(
             STATE_STATICALLY_ALLOCATED_INDEX,
@@ -245,13 +245,13 @@ impl PyASCIIObjectState {
 
     #[cfg(not(Py_3_12))]
     #[inline]
-    unsafe fn ready(&self) -> c_uint {
+    unsafe fn ready(&self) -> ffi::c_uint {
         std::mem::transmute(self.bitfield.get(STATE_READY_INDEX, STATE_READY_WIDTH) as u32)
     }
 
     #[cfg(not(Py_3_12))]
     #[inline]
-    unsafe fn set_ready(&mut self, val: c_uint) {
+    unsafe fn set_ready(&mut self, val: ffi::c_uint) {
         let val: u32 = std::mem::transmute(val);
         self.bitfield
             .set(STATE_READY_INDEX, STATE_READY_WIDTH, val as u64)
@@ -318,7 +318,7 @@ impl PyASCIIObject {
     /// Returns one of: [`SSTATE_NOT_INTERNED`], [`SSTATE_INTERNED_MORTAL`],
     /// [`SSTATE_INTERNED_IMMORTAL`], or [`SSTATE_INTERNED_IMMORTAL_STATIC`].
     #[inline]
-    pub unsafe fn interned(&self) -> c_uint {
+    pub unsafe fn interned(&self) -> ffi::c_uint {
         PyASCIIObjectState::from(self.state).interned()
     }
 
@@ -329,7 +329,7 @@ impl PyASCIIObject {
     /// [`SSTATE_INTERNED_MORTAL`], [`SSTATE_INTERNED_IMMORTAL`], or
     /// [`SSTATE_INTERNED_IMMORTAL_STATIC`] is invalid.
     #[inline]
-    pub unsafe fn set_interned(&mut self, val: c_uint) {
+    pub unsafe fn set_interned(&mut self, val: ffi::c_uint) {
         let mut state = PyASCIIObjectState::from(self.state);
         state.set_interned(val);
         self.state = u32::from(state);
@@ -341,7 +341,7 @@ impl PyASCIIObject {
     #[cfg_attr(not(Py_3_12), doc = "[`PyUnicode_WCHAR_KIND`], ")]
     /// [`PyUnicode_1BYTE_KIND`], [`PyUnicode_2BYTE_KIND`], or [`PyUnicode_4BYTE_KIND`].
     #[inline]
-    pub unsafe fn kind(&self) -> c_uint {
+    pub unsafe fn kind(&self) -> ffi::c_uint {
         PyASCIIObjectState::from(self.state).kind()
     }
 
@@ -351,7 +351,7 @@ impl PyASCIIObject {
     #[cfg_attr(not(Py_3_12), doc = "[`PyUnicode_WCHAR_KIND`], ")]
     /// [`PyUnicode_1BYTE_KIND`], [`PyUnicode_2BYTE_KIND`], or [`PyUnicode_4BYTE_KIND`] is invalid.
     #[inline]
-    pub unsafe fn set_kind(&mut self, val: c_uint) {
+    pub unsafe fn set_kind(&mut self, val: ffi::c_uint) {
         let mut state = PyASCIIObjectState::from(self.state);
         state.set_kind(val);
         self.state = u32::from(state);
@@ -361,7 +361,7 @@ impl PyASCIIObject {
     ///
     /// Returns either `0` or `1`.
     #[inline]
-    pub unsafe fn compact(&self) -> c_uint {
+    pub unsafe fn compact(&self) -> ffi::c_uint {
         PyASCIIObjectState::from(self.state).compact()
     }
 
@@ -369,7 +369,7 @@ impl PyASCIIObject {
     ///
     /// Calling this function with an argument that is neither `0` nor `1` is invalid.
     #[inline]
-    pub unsafe fn set_compact(&mut self, val: c_uint) {
+    pub unsafe fn set_compact(&mut self, val: ffi::c_uint) {
         let mut state = PyASCIIObjectState::from(self.state);
         state.set_compact(val);
         self.state = u32::from(state);
@@ -379,7 +379,7 @@ impl PyASCIIObject {
     ///
     /// Returns either `0` or `1`.
     #[inline]
-    pub unsafe fn ascii(&self) -> c_uint {
+    pub unsafe fn ascii(&self) -> ffi::c_uint {
         PyASCIIObjectState::from(self.state).ascii()
     }
 
@@ -388,7 +388,7 @@ impl PyASCIIObject {
     /// Calling this function with an argument that is neither `0` nor `1` is invalid.
     #[inline]
     #[cfg(not(all(Py_3_14, Py_GIL_DISABLED)))]
-    pub unsafe fn set_ascii(&mut self, val: c_uint) {
+    pub unsafe fn set_ascii(&mut self, val: ffi::c_uint) {
         let mut state = PyASCIIObjectState::from(self.state);
         state.set_ascii(val);
         self.state = u32::from(state);
@@ -399,7 +399,7 @@ impl PyASCIIObject {
     /// Returns either `0` or `1`.
     #[cfg(not(Py_3_12))]
     #[inline]
-    pub unsafe fn ready(&self) -> c_uint {
+    pub unsafe fn ready(&self) -> ffi::c_uint {
         PyASCIIObjectState::from(self.state).ready()
     }
 
@@ -408,7 +408,7 @@ impl PyASCIIObject {
     /// Calling this function with an argument that is neither `0` nor `1` is invalid.
     #[cfg(not(Py_3_12))]
     #[inline]
-    pub unsafe fn set_ready(&mut self, val: c_uint) {
+    pub unsafe fn set_ready(&mut self, val: ffi::c_uint) {
         let mut state = PyASCIIObjectState::from(self.state);
         state.set_ready(val);
         self.state = u32::from(state);
@@ -419,7 +419,7 @@ impl PyASCIIObject {
     /// Returns either `0` or `1`.
     #[inline]
     #[cfg(Py_3_12)]
-    pub unsafe fn statically_allocated(&self) -> c_uint {
+    pub unsafe fn statically_allocated(&self) -> ffi::c_uint {
         PyASCIIObjectState::from(self.state).statically_allocated()
     }
 
@@ -428,7 +428,7 @@ impl PyASCIIObject {
     /// Calling this function with an argument that is neither `0` nor `1` is invalid.
     #[inline]
     #[cfg(Py_3_12)]
-    pub unsafe fn set_statically_allocated(&mut self, val: c_uint) {
+    pub unsafe fn set_statically_allocated(&mut self, val: ffi::c_uint) {
         let mut state = PyASCIIObjectState::from(self.state);
         state.set_statically_allocated(val);
         self.state = u32::from(state);
@@ -439,14 +439,14 @@ impl PyASCIIObject {
 pub struct PyCompactUnicodeObject {
     pub _base: PyASCIIObject,
     pub utf8_length: Py_ssize_t,
-    pub utf8: *mut c_char,
+    pub utf8: *mut ffi::c_char,
     #[cfg(not(Py_3_12))]
     pub wstr_length: Py_ssize_t,
 }
 
 #[repr(C)]
 pub union PyUnicodeObjectData {
-    pub any: *mut c_void,
+    pub any: *mut ffi::c_void,
     pub latin1: *mut Py_UCS1,
     pub ucs2: *mut Py_UCS2,
     pub ucs4: *mut Py_UCS4,
@@ -460,7 +460,7 @@ pub struct PyUnicodeObject {
 
 extern "C" {
     #[cfg(not(any(PyPy, GraalPy)))]
-    pub fn _PyUnicode_CheckConsistency(op: *mut PyObject, check_content: c_int) -> c_int;
+    pub fn _PyUnicode_CheckConsistency(op: *mut PyObject, check_content: ffi::c_int) -> ffi::c_int;
 }
 
 // skipped PyUnicode_GET_SIZE
@@ -468,15 +468,15 @@ extern "C" {
 // skipped PyUnicode_AS_UNICODE
 // skipped PyUnicode_AS_DATA
 
-pub const SSTATE_NOT_INTERNED: c_uint = 0;
-pub const SSTATE_INTERNED_MORTAL: c_uint = 1;
-pub const SSTATE_INTERNED_IMMORTAL: c_uint = 2;
+pub const SSTATE_NOT_INTERNED: ffi::c_uint = 0;
+pub const SSTATE_INTERNED_MORTAL: ffi::c_uint = 1;
+pub const SSTATE_INTERNED_IMMORTAL: ffi::c_uint = 2;
 #[cfg(Py_3_12)]
-pub const SSTATE_INTERNED_IMMORTAL_STATIC: c_uint = 3;
+pub const SSTATE_INTERNED_IMMORTAL_STATIC: ffi::c_uint = 3;
 
 #[cfg(not(any(GraalPy, Py_3_14)))]
 #[inline]
-pub unsafe fn PyUnicode_IS_ASCII(op: *mut PyObject) -> c_uint {
+pub unsafe fn PyUnicode_IS_ASCII(op: *mut PyObject) -> ffi::c_uint {
     debug_assert!(crate::PyUnicode_Check(op) != 0);
     #[cfg(not(Py_3_12))]
     debug_assert!(PyUnicode_IS_READY(op) != 0);
@@ -486,23 +486,23 @@ pub unsafe fn PyUnicode_IS_ASCII(op: *mut PyObject) -> c_uint {
 
 #[cfg(not(any(GraalPy, Py_3_14)))]
 #[inline]
-pub unsafe fn PyUnicode_IS_COMPACT(op: *mut PyObject) -> c_uint {
+pub unsafe fn PyUnicode_IS_COMPACT(op: *mut PyObject) -> ffi::c_uint {
     (*(op as *mut PyASCIIObject)).compact()
 }
 
 #[cfg(not(any(GraalPy, Py_3_14)))]
 #[inline]
-pub unsafe fn PyUnicode_IS_COMPACT_ASCII(op: *mut PyObject) -> c_uint {
+pub unsafe fn PyUnicode_IS_COMPACT_ASCII(op: *mut PyObject) -> ffi::c_uint {
     ((*(op as *mut PyASCIIObject)).ascii() != 0 && PyUnicode_IS_COMPACT(op) != 0).into()
 }
 
 #[cfg(not(Py_3_12))]
 #[deprecated(note = "Removed in Python 3.12")]
-pub const PyUnicode_WCHAR_KIND: c_uint = 0;
+pub const PyUnicode_WCHAR_KIND: ffi::c_uint = 0;
 
-pub const PyUnicode_1BYTE_KIND: c_uint = 1;
-pub const PyUnicode_2BYTE_KIND: c_uint = 2;
-pub const PyUnicode_4BYTE_KIND: c_uint = 4;
+pub const PyUnicode_1BYTE_KIND: ffi::c_uint = 1;
+pub const PyUnicode_2BYTE_KIND: ffi::c_uint = 2;
+pub const PyUnicode_4BYTE_KIND: ffi::c_uint = 4;
 
 #[cfg(not(any(GraalPy, PyPy)))]
 #[inline]
@@ -525,12 +525,12 @@ pub unsafe fn PyUnicode_4BYTE_DATA(op: *mut PyObject) -> *mut Py_UCS4 {
 #[cfg(all(not(GraalPy), Py_3_14))]
 extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyUnicode_KIND")]
-    pub fn PyUnicode_KIND(op: *mut PyObject) -> c_uint;
+    pub fn PyUnicode_KIND(op: *mut PyObject) -> ffi::c_uint;
 }
 
 #[cfg(all(not(GraalPy), not(Py_3_14)))]
 #[inline]
-pub unsafe fn PyUnicode_KIND(op: *mut PyObject) -> c_uint {
+pub unsafe fn PyUnicode_KIND(op: *mut PyObject) -> ffi::c_uint {
     debug_assert!(crate::PyUnicode_Check(op) != 0);
     #[cfg(not(Py_3_12))]
     debug_assert!(PyUnicode_IS_READY(op) != 0);
@@ -540,17 +540,17 @@ pub unsafe fn PyUnicode_KIND(op: *mut PyObject) -> c_uint {
 
 #[cfg(not(any(GraalPy, Py_3_14)))]
 #[inline]
-pub unsafe fn _PyUnicode_COMPACT_DATA(op: *mut PyObject) -> *mut c_void {
+pub unsafe fn _PyUnicode_COMPACT_DATA(op: *mut PyObject) -> *mut ffi::c_void {
     if PyUnicode_IS_ASCII(op) != 0 {
-        (op as *mut PyASCIIObject).offset(1) as *mut c_void
+        (op as *mut PyASCIIObject).offset(1) as *mut ffi::c_void
     } else {
-        (op as *mut PyCompactUnicodeObject).offset(1) as *mut c_void
+        (op as *mut PyCompactUnicodeObject).offset(1) as *mut ffi::c_void
     }
 }
 
 #[cfg(not(any(GraalPy, PyPy)))]
 #[inline]
-pub unsafe fn _PyUnicode_NONCOMPACT_DATA(op: *mut PyObject) -> *mut c_void {
+pub unsafe fn _PyUnicode_NONCOMPACT_DATA(op: *mut PyObject) -> *mut ffi::c_void {
     debug_assert!(!(*(op as *mut PyUnicodeObject)).data.any.is_null());
 
     (*(op as *mut PyUnicodeObject)).data.any
@@ -558,7 +558,7 @@ pub unsafe fn _PyUnicode_NONCOMPACT_DATA(op: *mut PyObject) -> *mut c_void {
 
 #[cfg(not(any(GraalPy, PyPy, Py_3_14)))]
 #[inline]
-pub unsafe fn PyUnicode_DATA(op: *mut PyObject) -> *mut c_void {
+pub unsafe fn PyUnicode_DATA(op: *mut PyObject) -> *mut ffi::c_void {
     debug_assert!(crate::PyUnicode_Check(op) != 0);
 
     if PyUnicode_IS_COMPACT(op) != 0 {
@@ -572,7 +572,7 @@ pub unsafe fn PyUnicode_DATA(op: *mut PyObject) -> *mut c_void {
 #[cfg(all(not(GraalPy), Py_3_14))]
 extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyUnicode_DATA")]
-    pub fn PyUnicode_DATA(op: *mut PyObject) -> *mut c_void;
+    pub fn PyUnicode_DATA(op: *mut PyObject) -> *mut ffi::c_void;
 }
 
 // skipped PyUnicode_WRITE
@@ -591,26 +591,26 @@ pub unsafe fn PyUnicode_GET_LENGTH(op: *mut PyObject) -> Py_ssize_t {
 
 #[cfg(any(Py_3_12, GraalPy))]
 #[inline]
-pub unsafe fn PyUnicode_IS_READY(_op: *mut PyObject) -> c_uint {
+pub unsafe fn PyUnicode_IS_READY(_op: *mut PyObject) -> ffi::c_uint {
     // kept in CPython for backwards compatibility
     1
 }
 
 #[cfg(not(any(GraalPy, Py_3_12)))]
 #[inline]
-pub unsafe fn PyUnicode_IS_READY(op: *mut PyObject) -> c_uint {
+pub unsafe fn PyUnicode_IS_READY(op: *mut PyObject) -> ffi::c_uint {
     (*(op as *mut PyASCIIObject)).ready()
 }
 
 #[cfg(any(Py_3_12, GraalPy))]
 #[inline]
-pub unsafe fn PyUnicode_READY(_op: *mut PyObject) -> c_int {
+pub unsafe fn PyUnicode_READY(_op: *mut PyObject) -> ffi::c_int {
     0
 }
 
 #[cfg(not(any(Py_3_12, GraalPy)))]
 #[inline]
-pub unsafe fn PyUnicode_READY(op: *mut PyObject) -> c_int {
+pub unsafe fn PyUnicode_READY(op: *mut PyObject) -> ffi::c_int {
     debug_assert!(crate::PyUnicode_Check(op) != 0);
 
     if PyUnicode_IS_READY(op) != 0 {
@@ -628,7 +628,7 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyUnicode_New")]
     pub fn PyUnicode_New(size: Py_ssize_t, maxchar: Py_UCS4) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "_PyPyUnicode_Ready")]
-    pub fn _PyUnicode_Ready(unicode: *mut PyObject) -> c_int;
+    pub fn _PyUnicode_Ready(unicode: *mut PyObject) -> ffi::c_int;
 
     // skipped _PyUnicode_Copy
 
@@ -660,8 +660,8 @@ extern "C" {
 
     #[cfg_attr(PyPy, link_name = "PyPyUnicode_FromKindAndData")]
     pub fn PyUnicode_FromKindAndData(
-        kind: c_int,
-        buffer: *const c_void,
+        kind: ffi::c_int,
+        buffer: *const ffi::c_void,
         size: Py_ssize_t,
     ) -> *mut PyObject;
 
@@ -697,13 +697,13 @@ extern "C" {
     #[cfg(Py_3_14)]
     pub fn PyUnicodeWriter_Discard(writer: *mut PyUnicodeWriter);
     #[cfg(Py_3_14)]
-    pub fn PyUnicodeWriter_WriteChar(writer: *mut PyUnicodeWriter, ch: Py_UCS4) -> c_int;
+    pub fn PyUnicodeWriter_WriteChar(writer: *mut PyUnicodeWriter, ch: Py_UCS4) -> ffi::c_int;
     #[cfg(Py_3_14)]
     pub fn PyUnicodeWriter_WriteUTF8(
         writer: *mut PyUnicodeWriter,
-        str: *const c_char,
+        str: *const ffi::c_char,
         size: Py_ssize_t,
-    ) -> c_int;
+    ) -> ffi::c_int;
 }
 
 // skipped _PyUnicodeWriter
@@ -725,23 +725,23 @@ extern "C" {
     // skipped _PyUnicode_AsStringAndSize
 
     #[cfg_attr(PyPy, link_name = "PyPyUnicode_AsUTF8")]
-    pub fn PyUnicode_AsUTF8(unicode: *mut PyObject) -> *const c_char;
+    pub fn PyUnicode_AsUTF8(unicode: *mut PyObject) -> *const ffi::c_char;
 
     // skipped _PyUnicode_AsString
 
     pub fn PyUnicode_Encode(
         s: *const wchar_t,
         size: Py_ssize_t,
-        encoding: *const c_char,
-        errors: *const c_char,
+        encoding: *const ffi::c_char,
+        errors: *const ffi::c_char,
     ) -> *mut PyObject;
 
     pub fn PyUnicode_EncodeUTF7(
         data: *const wchar_t,
         length: Py_ssize_t,
-        base64SetO: c_int,
-        base64WhiteSpace: c_int,
-        errors: *const c_char,
+        base64SetO: ffi::c_int,
+        base64WhiteSpace: ffi::c_int,
+        errors: *const ffi::c_char,
     ) -> *mut PyObject;
 
     // skipped _PyUnicode_EncodeUTF7
@@ -751,14 +751,14 @@ extern "C" {
     pub fn PyUnicode_EncodeUTF8(
         data: *const wchar_t,
         length: Py_ssize_t,
-        errors: *const c_char,
+        errors: *const ffi::c_char,
     ) -> *mut PyObject;
 
     pub fn PyUnicode_EncodeUTF32(
         data: *const wchar_t,
         length: Py_ssize_t,
-        errors: *const c_char,
-        byteorder: c_int,
+        errors: *const ffi::c_char,
+        byteorder: ffi::c_int,
     ) -> *mut PyObject;
 
     // skipped _PyUnicode_EncodeUTF32
@@ -766,8 +766,8 @@ extern "C" {
     pub fn PyUnicode_EncodeUTF16(
         data: *const wchar_t,
         length: Py_ssize_t,
-        errors: *const c_char,
-        byteorder: c_int,
+        errors: *const ffi::c_char,
+        byteorder: ffi::c_int,
     ) -> *mut PyObject;
 
     // skipped _PyUnicode_EncodeUTF16
@@ -787,7 +787,7 @@ extern "C" {
     pub fn PyUnicode_EncodeLatin1(
         data: *const wchar_t,
         length: Py_ssize_t,
-        errors: *const c_char,
+        errors: *const ffi::c_char,
     ) -> *mut PyObject;
 
     // skipped _PyUnicode_AsASCIIString
@@ -796,14 +796,14 @@ extern "C" {
     pub fn PyUnicode_EncodeASCII(
         data: *const wchar_t,
         length: Py_ssize_t,
-        errors: *const c_char,
+        errors: *const ffi::c_char,
     ) -> *mut PyObject;
 
     pub fn PyUnicode_EncodeCharmap(
         data: *const wchar_t,
         length: Py_ssize_t,
         mapping: *mut PyObject,
-        errors: *const c_char,
+        errors: *const ffi::c_char,
     ) -> *mut PyObject;
 
     // skipped _PyUnicode_EncodeCharmap
@@ -812,7 +812,7 @@ extern "C" {
         data: *const wchar_t,
         length: Py_ssize_t,
         table: *mut PyObject,
-        errors: *const c_char,
+        errors: *const ffi::c_char,
     ) -> *mut PyObject;
 
     // skipped PyUnicode_EncodeMBCS
@@ -821,9 +821,9 @@ extern "C" {
     pub fn PyUnicode_EncodeDecimal(
         s: *mut wchar_t,
         length: Py_ssize_t,
-        output: *mut c_char,
-        errors: *const c_char,
-    ) -> c_int;
+        output: *mut ffi::c_char,
+        errors: *const ffi::c_char,
+    ) -> ffi::c_int;
 
     #[cfg_attr(PyPy, link_name = "PyPyUnicode_TransformDecimalToASCII")]
     pub fn PyUnicode_TransformDecimalToASCII(s: *mut wchar_t, length: Py_ssize_t) -> *mut PyObject;

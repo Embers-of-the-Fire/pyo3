@@ -1,5 +1,5 @@
 use crate::{PyGetSetDef, PyMethodDef, PyObject, PyTypeObject};
-use std::ffi::{c_char, c_int, c_void};
+use std::ffi;
 
 #[cfg(Py_3_11)]
 use crate::PyMemberDef;
@@ -8,7 +8,7 @@ pub type wrapperfunc = Option<
     unsafe extern "C" fn(
         slf: *mut PyObject,
         args: *mut PyObject,
-        wrapped: *mut c_void,
+        wrapped: *mut ffi::c_void,
     ) -> *mut PyObject,
 >;
 
@@ -16,23 +16,23 @@ pub type wrapperfunc_kwds = Option<
     unsafe extern "C" fn(
         slf: *mut PyObject,
         args: *mut PyObject,
-        wrapped: *mut c_void,
+        wrapped: *mut ffi::c_void,
         kwds: *mut PyObject,
     ) -> *mut PyObject,
 >;
 
 #[repr(C)]
 pub struct wrapperbase {
-    pub name: *const c_char,
-    pub offset: c_int,
-    pub function: *mut c_void,
+    pub name: *const ffi::c_char,
+    pub offset: ffi::c_int,
+    pub function: *mut ffi::c_void,
     pub wrapper: wrapperfunc,
-    pub doc: *const c_char,
-    pub flags: c_int,
+    pub doc: *const ffi::c_char,
+    pub flags: ffi::c_int,
     pub name_strobj: *mut PyObject,
 }
 
-pub const PyWrapperFlag_KEYWORDS: c_int = 1;
+pub const PyWrapperFlag_KEYWORDS: ffi::c_int = 1;
 
 #[repr(C)]
 pub struct PyDescrObject {
@@ -72,7 +72,7 @@ pub struct PyGetSetDescrObject {
 pub struct PyWrapperDescrObject {
     pub d_common: PyDescrObject,
     pub d_base: *mut wrapperbase,
-    pub d_wrapped: *mut c_void,
+    pub d_wrapped: *mut ffi::c_void,
 }
 
 // skipped _PyMethodWrapper_Type

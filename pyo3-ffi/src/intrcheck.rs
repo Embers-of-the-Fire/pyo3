@@ -1,8 +1,8 @@
-use std::ffi::c_int;
+use std::ffi;
 
 extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyOS_InterruptOccurred")]
-    pub fn PyOS_InterruptOccurred() -> c_int;
+    pub fn PyOS_InterruptOccurred() -> ffi::c_int;
     #[cfg(not(Py_3_10))]
     #[deprecated(note = "Not documented in Python API; see Python 3.10 release notes")]
     pub fn PyOS_InitInterrupts();

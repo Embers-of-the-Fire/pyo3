@@ -1,4 +1,4 @@
-use std::ffi::c_int;
+use std::ffi;
 #[cfg(not(all(PyPy, not(Py_3_8))))]
 use std::ptr::addr_of_mut;
 
@@ -71,8 +71,8 @@ extern "C" {
 
 #[cfg(not(all(PyPy, not(Py_3_8))))]
 #[inline]
-pub unsafe fn PyFunction_Check(op: *mut PyObject) -> c_int {
-    (crate::Py_TYPE(op) == addr_of_mut!(PyFunction_Type)) as c_int
+pub unsafe fn PyFunction_Check(op: *mut PyObject) -> ffi::c_int {
+    (crate::Py_TYPE(op) == addr_of_mut!(PyFunction_Type)) as ffi::c_int
 }
 
 extern "C" {
@@ -86,13 +86,13 @@ extern "C" {
     pub fn PyFunction_GetGlobals(op: *mut PyObject) -> *mut PyObject;
     pub fn PyFunction_GetModule(op: *mut PyObject) -> *mut PyObject;
     pub fn PyFunction_GetDefaults(op: *mut PyObject) -> *mut PyObject;
-    pub fn PyFunction_SetDefaults(op: *mut PyObject, defaults: *mut PyObject) -> c_int;
+    pub fn PyFunction_SetDefaults(op: *mut PyObject, defaults: *mut PyObject) -> ffi::c_int;
     pub fn PyFunction_GetKwDefaults(op: *mut PyObject) -> *mut PyObject;
-    pub fn PyFunction_SetKwDefaults(op: *mut PyObject, defaults: *mut PyObject) -> c_int;
+    pub fn PyFunction_SetKwDefaults(op: *mut PyObject, defaults: *mut PyObject) -> ffi::c_int;
     pub fn PyFunction_GetClosure(op: *mut PyObject) -> *mut PyObject;
-    pub fn PyFunction_SetClosure(op: *mut PyObject, closure: *mut PyObject) -> c_int;
+    pub fn PyFunction_SetClosure(op: *mut PyObject, closure: *mut PyObject) -> ffi::c_int;
     pub fn PyFunction_GetAnnotations(op: *mut PyObject) -> *mut PyObject;
-    pub fn PyFunction_SetAnnotations(op: *mut PyObject, annotations: *mut PyObject) -> c_int;
+    pub fn PyFunction_SetAnnotations(op: *mut PyObject, annotations: *mut PyObject) -> ffi::c_int;
 }
 
 // skipped _PyFunction_Vectorcall

@@ -1,9 +1,7 @@
 #[cfg(any(Py_3_11, all(Py_3_9, not(PyPy))))]
 use crate::PyFrameObject;
 use crate::{PyObject, PyTypeObject, Py_TYPE};
-#[cfg(Py_3_12)]
-use std::ffi::c_char;
-use std::ffi::c_int;
+use std::ffi;
 use std::ptr::addr_of_mut;
 
 // NB used in `_PyEval_EvalFrameDefault`, maybe we remove this too.
@@ -19,14 +17,14 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PyFrame_Check(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == addr_of_mut!(PyFrame_Type)) as c_int
+pub unsafe fn PyFrame_Check(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == addr_of_mut!(PyFrame_Type)) as ffi::c_int
 }
 
 #[cfg(Py_3_13)]
 #[inline]
-pub unsafe fn PyFrameLocalsProxy_Check(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == addr_of_mut!(PyFrameLocalsProxy_Type)) as c_int
+pub unsafe fn PyFrameLocalsProxy_Check(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == addr_of_mut!(PyFrameLocalsProxy_Type)) as ffi::c_int
 }
 
 extern "C" {
@@ -46,13 +44,14 @@ extern "C" {
     pub fn PyFrame_GetGenerator(frame: *mut PyFrameObject) -> *mut PyObject;
 
     #[cfg(Py_3_11)]
-    pub fn PyFrame_GetLasti(frame: *mut PyFrameObject) -> c_int;
+    pub fn PyFrame_GetLasti(frame: *mut PyFrameObject) -> ffi::c_int;
 
     #[cfg(Py_3_12)]
     pub fn PyFrame_GetVar(frame: *mut PyFrameObject, name: *mut PyObject) -> *mut PyObject;
 
     #[cfg(Py_3_12)]
-    pub fn PyFrame_GetVarString(frame: *mut PyFrameObject, name: *mut c_char) -> *mut PyObject;
+    pub fn PyFrame_GetVarString(frame: *mut PyFrameObject, name: *mut ffi::c_char)
+        -> *mut PyObject;
 
     // skipped PyUnstable_InterpreterFrame_GetCode
     // skipped PyUnstable_InterpreterFrame_GetLasti

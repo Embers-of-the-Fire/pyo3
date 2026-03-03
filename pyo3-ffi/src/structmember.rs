@@ -1,4 +1,4 @@
-use std::ffi::c_int;
+use std::ffi;
 
 pub use crate::PyMemberDef;
 
@@ -28,6 +28,6 @@ pub use crate::_Py_T_NONE as T_NONE;
 
 /* Flags */
 pub use crate::Py_READONLY as READONLY;
-pub const READ_RESTRICTED: c_int = 2;
-pub const PY_WRITE_RESTRICTED: c_int = 4;
-pub const RESTRICTED: c_int = READ_RESTRICTED | PY_WRITE_RESTRICTED;
+pub const READ_RESTRICTED: ffi::c_int = 2;
+pub const PY_WRITE_RESTRICTED: ffi::c_int = 4;
+pub const RESTRICTED: ffi::c_int = READ_RESTRICTED | PY_WRITE_RESTRICTED;

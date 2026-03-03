@@ -1,8 +1,6 @@
 use crate::object::*;
 use crate::PyFrameObject;
-#[cfg(all(Py_3_11, not(any(PyPy, GraalPy, Py_3_14))))]
-use std::ffi::c_char;
-use std::ffi::c_int;
+use std::ffi;
 use std::ptr::addr_of_mut;
 
 #[cfg(not(any(PyPy, GraalPy, Py_3_14)))]
@@ -12,7 +10,7 @@ pub struct PyGenObject {
     #[cfg(not(Py_3_11))]
     pub gi_frame: *mut PyFrameObject,
     #[cfg(not(Py_3_10))]
-    pub gi_running: c_int,
+    pub gi_running: ffi::c_int,
     #[cfg(not(Py_3_12))]
     pub gi_code: *mut PyObject,
     pub gi_weakreflist: *mut PyObject,
@@ -26,11 +24,11 @@ pub struct PyGenObject {
     #[cfg(Py_3_11)]
     pub gi_origin_or_finalizer: *mut PyObject,
     #[cfg(Py_3_11)]
-    pub gi_hooks_inited: c_char,
+    pub gi_hooks_inited: ffi::c_char,
     #[cfg(Py_3_11)]
-    pub gi_closed: c_char,
+    pub gi_closed: ffi::c_char,
     #[cfg(Py_3_11)]
-    pub gi_running_async: c_char,
+    pub gi_running_async: ffi::c_char,
     #[cfg(Py_3_11)]
     pub gi_frame_state: i8,
     #[cfg(Py_3_11)]
@@ -46,13 +44,13 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PyGen_Check(op: *mut PyObject) -> c_int {
+pub unsafe fn PyGen_Check(op: *mut PyObject) -> ffi::c_int {
     PyObject_TypeCheck(op, addr_of_mut!(PyGen_Type))
 }
 
 #[inline]
-pub unsafe fn PyGen_CheckExact(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == addr_of_mut!(PyGen_Type)) as c_int
+pub unsafe fn PyGen_CheckExact(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == addr_of_mut!(PyGen_Type)) as ffi::c_int
 }
 
 extern "C" {
@@ -64,7 +62,7 @@ extern "C" {
     // skipped _PyGen_Finalize
     #[cfg(not(any(Py_3_9, PyPy)))]
     #[deprecated(note = "This function was never documented in the Python API.")]
-    pub fn PyGen_NeedsFinalizing(op: *mut PyGenObject) -> c_int;
+    pub fn PyGen_NeedsFinalizing(op: *mut PyGenObject) -> ffi::c_int;
 }
 
 // skipped PyCoroObject
@@ -77,7 +75,7 @@ extern "C" {
 // skipped _PyCoroWrapper_Type
 
 #[inline]
-pub unsafe fn PyCoro_CheckExact(op: *mut PyObject) -> c_int {
+pub unsafe fn PyCoro_CheckExact(op: *mut PyObject) -> ffi::c_int {
     PyObject_TypeCheck(op, addr_of_mut!(PyCoro_Type))
 }
 
@@ -97,7 +95,7 @@ extern "C" {
 // skipped PyAsyncGen_New
 
 #[inline]
-pub unsafe fn PyAsyncGen_CheckExact(op: *mut PyObject) -> c_int {
+pub unsafe fn PyAsyncGen_CheckExact(op: *mut PyObject) -> ffi::c_int {
     PyObject_TypeCheck(op, addr_of_mut!(PyAsyncGen_Type))
 }
 

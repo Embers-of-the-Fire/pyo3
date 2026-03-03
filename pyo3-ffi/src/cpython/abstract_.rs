@@ -1,7 +1,5 @@
 use crate::{PyObject, Py_ssize_t};
-#[cfg(any(all(Py_3_8, not(PyPy)), not(Py_3_11)))]
-use std::ffi::c_char;
-use std::ffi::c_int;
+use std::ffi;
 
 #[cfg(not(Py_3_11))]
 use crate::Py_buffer;
@@ -28,7 +26,7 @@ extern "C" {
         tstate: *mut PyThreadState,
         callable: *mut PyObject,
         result: *mut PyObject,
-        where_: *const c_char,
+        where_: *const ffi::c_char,
     ) -> *mut PyObject;
 
     #[cfg(all(Py_3_8, not(PyPy)))]
@@ -63,7 +61,7 @@ pub unsafe fn PyVectorcall_Function(callable: *mut PyObject) -> Option<vectorcal
     assert!(PyCallable_Check(callable) > 0);
     let offset = (*tp).tp_vectorcall_offset;
     assert!(offset > 0);
-    let ptr = callable.cast::<c_char>().offset(offset).cast();
+    let ptr = callable.cast::<ffi::c_char>().offset(offset).cast();
     *ptr
 }
 
@@ -220,60 +218,61 @@ extern "C" {
 
     #[cfg(not(Py_3_11))] // moved to src/buffer.rs from 3.11
     #[cfg(all(Py_3_9, not(PyPy)))]
-    pub fn PyObject_CheckBuffer(obj: *mut PyObject) -> c_int;
+    pub fn PyObject_CheckBuffer(obj: *mut PyObject) -> ffi::c_int;
 }
 
 #[cfg(not(any(Py_3_9, PyPy)))]
 #[inline]
-pub unsafe fn PyObject_CheckBuffer(o: *mut PyObject) -> c_int {
+pub unsafe fn PyObject_CheckBuffer(o: *mut PyObject) -> ffi::c_int {
     let tp_as_buffer = (*crate::Py_TYPE(o)).tp_as_buffer;
-    (!tp_as_buffer.is_null() && (*tp_as_buffer).bf_getbuffer.is_some()) as c_int
+    (!tp_as_buffer.is_null() && (*tp_as_buffer).bf_getbuffer.is_some()) as ffi::c_int
 }
 
 #[cfg(not(Py_3_11))] // moved to src/buffer.rs from 3.11
 extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyObject_GetBuffer")]
-    pub fn PyObject_GetBuffer(obj: *mut PyObject, view: *mut Py_buffer, flags: c_int) -> c_int;
-    #[cfg_attr(PyPy, link_name = "PyPyBuffer_GetPointer")]
-    pub fn PyBuffer_GetPointer(
+    pub fn PyObject_GetBuffer(
+        obj: *mut PyObject,
         view: *mut Py_buffer,
-        indices: *mut Py_ssize_t,
-    ) -> *mut std::ffi::c_void;
+        flags: ffi::c_int,
+    ) -> ffi::c_int;
+    #[cfg_attr(PyPy, link_name = "PyPyBuffer_GetPointer")]
+    pub fn PyBuffer_GetPointer(view: *mut Py_buffer, indices: *mut Py_ssize_t) -> *mut ffi::c_void;
     #[cfg_attr(PyPy, link_name = "PyPyBuffer_SizeFromFormat")]
-    pub fn PyBuffer_SizeFromFormat(format: *const c_char) -> Py_ssize_t;
+    pub fn PyBuffer_SizeFromFormat(format: *const ffi::c_char) -> Py_ssize_t;
     #[cfg_attr(PyPy, link_name = "PyPyBuffer_ToContiguous")]
     pub fn PyBuffer_ToContiguous(
-        buf: *mut std::ffi::c_void,
+        buf: *mut ffi::c_void,
         view: *mut Py_buffer,
         len: Py_ssize_t,
-        order: c_char,
-    ) -> c_int;
+        order: ffi::c_char,
+    ) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyBuffer_FromContiguous")]
     pub fn PyBuffer_FromContiguous(
         view: *mut Py_buffer,
-        buf: *mut std::ffi::c_void,
+        buf: *mut ffi::c_void,
         len: Py_ssize_t,
-        order: c_char,
-    ) -> c_int;
-    pub fn PyObject_CopyData(dest: *mut PyObject, src: *mut PyObject) -> c_int;
+        order: ffi::c_char,
+    ) -> ffi::c_int;
+    pub fn PyObject_CopyData(dest: *mut PyObject, src: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyBuffer_IsContiguous")]
-    pub fn PyBuffer_IsContiguous(view: *const Py_buffer, fort: c_char) -> c_int;
+    pub fn PyBuffer_IsContiguous(view: *const Py_buffer, fort: ffi::c_char) -> ffi::c_int;
     pub fn PyBuffer_FillContiguousStrides(
-        ndims: c_int,
+        ndims: ffi::c_int,
         shape: *mut Py_ssize_t,
         strides: *mut Py_ssize_t,
-        itemsize: c_int,
-        fort: c_char,
+        itemsize: ffi::c_int,
+        fort: ffi::c_char,
     );
     #[cfg_attr(PyPy, link_name = "PyPyBuffer_FillInfo")]
     pub fn PyBuffer_FillInfo(
         view: *mut Py_buffer,
         o: *mut PyObject,
-        buf: *mut std::ffi::c_void,
+        buf: *mut ffi::c_void,
         len: Py_ssize_t,
-        readonly: c_int,
-        flags: c_int,
-    ) -> c_int;
+        readonly: ffi::c_int,
+        flags: ffi::c_int,
+    ) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyBuffer_Release")]
     pub fn PyBuffer_Release(view: *mut Py_buffer);
 }
@@ -286,16 +285,16 @@ extern "C" {
 
 // skipped PySequence_ITEM
 
-pub const PY_ITERSEARCH_COUNT: c_int = 1;
-pub const PY_ITERSEARCH_INDEX: c_int = 2;
-pub const PY_ITERSEARCH_CONTAINS: c_int = 3;
+pub const PY_ITERSEARCH_COUNT: ffi::c_int = 1;
+pub const PY_ITERSEARCH_INDEX: ffi::c_int = 2;
+pub const PY_ITERSEARCH_CONTAINS: ffi::c_int = 3;
 
 extern "C" {
     #[cfg(not(any(PyPy, GraalPy)))]
     pub fn _PySequence_IterSearch(
         seq: *mut PyObject,
         obj: *mut PyObject,
-        operation: c_int,
+        operation: ffi::c_int,
     ) -> Py_ssize_t;
 }
 

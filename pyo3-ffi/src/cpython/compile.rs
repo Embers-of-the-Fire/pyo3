@@ -7,9 +7,7 @@ use crate::pythonrun::*;
 #[cfg(not(any(PyPy, Py_3_10)))]
 use crate::PyCodeObject;
 use crate::INT_MAX;
-#[cfg(not(any(PyPy, Py_3_10)))]
-use std::ffi::c_char;
-use std::ffi::c_int;
+use std::ffi;
 
 // skipped PyCF_MASK
 // skipped PyCF_MASK_OBSOLETE
@@ -25,9 +23,9 @@ use std::ffi::c_int;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct PyCompilerFlags {
-    pub cf_flags: c_int,
+    pub cf_flags: ffi::c_int,
     #[cfg(Py_3_8)]
-    pub cf_feature_version: c_int,
+    pub cf_feature_version: ffi::c_int,
 }
 
 // skipped _PyCompilerFlags_INIT
@@ -41,8 +39,8 @@ pub struct PyCompilerFlags {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct PyFutureFeatures {
-    pub ff_features: c_int,
-    pub ff_lineno: c_int,
+    pub ff_features: ffi::c_int,
+    pub ff_lineno: ffi::c_int,
 }
 
 // FIXME: these constants should probably be &CStr, if they are used at all
@@ -60,13 +58,13 @@ pub const FUTURE_ANNOTATIONS: &str = "annotations";
 
 #[cfg(not(any(PyPy, GraalPy, Py_3_10)))]
 extern "C" {
-    pub fn PyNode_Compile(arg1: *mut _node, arg2: *const c_char) -> *mut PyCodeObject;
+    pub fn PyNode_Compile(arg1: *mut _node, arg2: *const ffi::c_char) -> *mut PyCodeObject;
 
     pub fn PyAST_CompileEx(
         _mod: *mut _mod,
-        filename: *const c_char,
+        filename: *const ffi::c_char,
         flags: *mut PyCompilerFlags,
-        optimize: c_int,
+        optimize: ffi::c_int,
         arena: *mut PyArena,
     ) -> *mut PyCodeObject;
 
@@ -74,11 +72,12 @@ extern "C" {
         _mod: *mut _mod,
         filename: *mut PyObject,
         flags: *mut PyCompilerFlags,
-        optimize: c_int,
+        optimize: ffi::c_int,
         arena: *mut PyArena,
     ) -> *mut PyCodeObject;
 
-    pub fn PyFuture_FromAST(_mod: *mut _mod, filename: *const c_char) -> *mut PyFutureFeatures;
+    pub fn PyFuture_FromAST(_mod: *mut _mod, filename: *const ffi::c_char)
+        -> *mut PyFutureFeatures;
 
     pub fn PyFuture_FromASTObject(
         _mod: *mut _mod,
@@ -86,12 +85,16 @@ extern "C" {
     ) -> *mut PyFutureFeatures;
 }
 
-pub const PY_INVALID_STACK_EFFECT: c_int = INT_MAX;
+pub const PY_INVALID_STACK_EFFECT: ffi::c_int = INT_MAX;
 
 extern "C" {
 
-    pub fn PyCompile_OpcodeStackEffect(opcode: c_int, oparg: c_int) -> c_int;
+    pub fn PyCompile_OpcodeStackEffect(opcode: ffi::c_int, oparg: ffi::c_int) -> ffi::c_int;
 
     #[cfg(Py_3_8)]
-    pub fn PyCompile_OpcodeStackEffectWithJump(opcode: c_int, oparg: c_int, jump: c_int) -> c_int;
+    pub fn PyCompile_OpcodeStackEffectWithJump(
+        opcode: ffi::c_int,
+        oparg: ffi::c_int,
+        jump: ffi::c_int,
+    ) -> ffi::c_int;
 }

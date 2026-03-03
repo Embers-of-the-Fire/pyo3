@@ -1,27 +1,27 @@
 use crate::pytypedefs::PyThreadState;
 
 use libc::wchar_t;
-use std::ffi::{c_char, c_int};
+use std::ffi;
 
 extern "C" {
     pub fn Py_Initialize();
-    pub fn Py_InitializeEx(arg1: c_int);
+    pub fn Py_InitializeEx(arg1: ffi::c_int);
     pub fn Py_Finalize();
-    pub fn Py_FinalizeEx() -> c_int;
+    pub fn Py_FinalizeEx() -> ffi::c_int;
 
     #[cfg_attr(PyPy, link_name = "PyPy_IsInitialized")]
-    pub fn Py_IsInitialized() -> c_int;
+    pub fn Py_IsInitialized() -> ffi::c_int;
 
     pub fn Py_NewInterpreter() -> *mut PyThreadState;
     pub fn Py_EndInterpreter(arg1: *mut PyThreadState);
 
     #[cfg_attr(PyPy, link_name = "PyPy_AtExit")]
-    pub fn Py_AtExit(func: Option<extern "C" fn()>) -> c_int;
+    pub fn Py_AtExit(func: Option<extern "C" fn()>) -> ffi::c_int;
 
-    pub fn Py_Exit(arg1: c_int) -> !;
+    pub fn Py_Exit(arg1: ffi::c_int) -> !;
 
-    pub fn Py_Main(argc: c_int, argv: *mut *mut wchar_t) -> c_int;
-    pub fn Py_BytesMain(argc: c_int, argv: *mut *mut c_char) -> c_int;
+    pub fn Py_Main(argc: ffi::c_int, argv: *mut *mut wchar_t) -> ffi::c_int;
+    pub fn Py_BytesMain(argc: ffi::c_int, argv: *mut *mut ffi::c_char) -> ffi::c_int;
 
     #[cfg_attr(
         Py_3_11,
@@ -77,22 +77,22 @@ extern "C" {
     // skipped _Py_CheckPython3
 
     #[cfg_attr(PyPy, link_name = "PyPy_GetVersion")]
-    pub fn Py_GetVersion() -> *const c_char;
-    pub fn Py_GetPlatform() -> *const c_char;
-    pub fn Py_GetCopyright() -> *const c_char;
-    pub fn Py_GetCompiler() -> *const c_char;
-    pub fn Py_GetBuildInfo() -> *const c_char;
+    pub fn Py_GetVersion() -> *const ffi::c_char;
+    pub fn Py_GetPlatform() -> *const ffi::c_char;
+    pub fn Py_GetCopyright() -> *const ffi::c_char;
+    pub fn Py_GetCompiler() -> *const ffi::c_char;
+    pub fn Py_GetBuildInfo() -> *const ffi::c_char;
 }
 
-type PyOS_sighandler_t = unsafe extern "C" fn(arg1: c_int);
+type PyOS_sighandler_t = unsafe extern "C" fn(arg1: ffi::c_int);
 
 extern "C" {
-    pub fn PyOS_getsig(arg1: c_int) -> PyOS_sighandler_t;
-    pub fn PyOS_setsig(arg1: c_int, arg2: PyOS_sighandler_t) -> PyOS_sighandler_t;
+    pub fn PyOS_getsig(arg1: ffi::c_int) -> PyOS_sighandler_t;
+    pub fn PyOS_setsig(arg1: ffi::c_int, arg2: PyOS_sighandler_t) -> PyOS_sighandler_t;
 
     #[cfg(Py_3_11)]
-    pub static Py_Version: std::ffi::c_ulong;
+    pub static Py_Version: ffi::c_ulong;
 
     #[cfg(Py_3_13)]
-    pub fn Py_IsFinalizing() -> c_int;
+    pub fn Py_IsFinalizing() -> ffi::c_int;
 }

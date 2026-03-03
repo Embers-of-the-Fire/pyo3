@@ -1,11 +1,11 @@
 use crate::PyObject;
-use std::ffi::c_double;
+use std::ffi;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Py_complex {
-    pub real: c_double,
-    pub imag: c_double,
+    pub real: ffi::c_double,
+    pub imag: ffi::c_double,
 }
 
 // skipped private function _Py_c_sum

@@ -1,7 +1,7 @@
 use crate::object::{PyObject, PyTypeObject, Py_TYPE};
 #[cfg(Py_3_9)]
 use crate::PyObject_TypeCheck;
-use std::ffi::{c_char, c_int, c_void};
+use std::ffi;
 use std::{mem, ptr};
 
 #[cfg(all(Py_3_9, not(Py_LIMITED_API), not(GraalPy)))]
@@ -23,20 +23,20 @@ extern "C" {
 
 #[cfg(Py_3_9)]
 #[inline]
-pub unsafe fn PyCFunction_CheckExact(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == ptr::addr_of_mut!(PyCFunction_Type)) as c_int
+pub unsafe fn PyCFunction_CheckExact(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == ptr::addr_of_mut!(PyCFunction_Type)) as ffi::c_int
 }
 
 #[cfg(Py_3_9)]
 #[inline]
-pub unsafe fn PyCFunction_Check(op: *mut PyObject) -> c_int {
+pub unsafe fn PyCFunction_Check(op: *mut PyObject) -> ffi::c_int {
     PyObject_TypeCheck(op, ptr::addr_of_mut!(PyCFunction_Type))
 }
 
 #[cfg(not(Py_3_9))]
 #[inline]
-pub unsafe fn PyCFunction_Check(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == ptr::addr_of_mut!(PyCFunction_Type)) as c_int
+pub unsafe fn PyCFunction_Check(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == ptr::addr_of_mut!(PyCFunction_Type)) as ffi::c_int
 }
 
 pub type PyCFunction =
@@ -84,7 +84,7 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyCFunction_GetFunction")]
     pub fn PyCFunction_GetFunction(f: *mut PyObject) -> Option<PyCFunction>;
     pub fn PyCFunction_GetSelf(f: *mut PyObject) -> *mut PyObject;
-    pub fn PyCFunction_GetFlags(f: *mut PyObject) -> c_int;
+    pub fn PyCFunction_GetFlags(f: *mut PyObject) -> ffi::c_int;
     #[cfg(not(Py_3_13))]
     #[cfg_attr(Py_3_9, deprecated(note = "Python 3.9"))]
     pub fn PyCFunction_Call(
@@ -102,10 +102,10 @@ extern "C" {
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct PyMethodDef {
-    pub ml_name: *const c_char,
+    pub ml_name: *const ffi::c_char,
     pub ml_meth: PyMethodDefPointer,
-    pub ml_flags: c_int,
-    pub ml_doc: *const c_char,
+    pub ml_flags: ffi::c_int,
+    pub ml_doc: *const ffi::c_char,
 }
 
 impl PyMethodDef {
@@ -173,11 +173,11 @@ pub union PyMethodDefPointer {
     #[cfg(all(Py_3_9, not(Py_LIMITED_API)))]
     pub PyCMethod: PyCMethod,
 
-    Void: *mut c_void,
+    Void: *mut ffi::c_void,
 }
 
 impl PyMethodDefPointer {
-    pub fn as_ptr(&self) -> *mut c_void {
+    pub fn as_ptr(&self) -> *mut ffi::c_void {
         unsafe { self.Void }
     }
 
@@ -249,36 +249,36 @@ extern "C" {
 }
 
 /* Flag passed to newmethodobject */
-pub const METH_VARARGS: c_int = 0x0001;
-pub const METH_KEYWORDS: c_int = 0x0002;
+pub const METH_VARARGS: ffi::c_int = 0x0001;
+pub const METH_KEYWORDS: ffi::c_int = 0x0002;
 /* METH_NOARGS and METH_O must not be combined with the flags above. */
-pub const METH_NOARGS: c_int = 0x0004;
-pub const METH_O: c_int = 0x0008;
+pub const METH_NOARGS: ffi::c_int = 0x0004;
+pub const METH_O: ffi::c_int = 0x0008;
 
 /* METH_CLASS and METH_STATIC are a little different; these control
 the construction of methods for a class.  These cannot be used for
 functions in modules. */
-pub const METH_CLASS: c_int = 0x0010;
-pub const METH_STATIC: c_int = 0x0020;
+pub const METH_CLASS: ffi::c_int = 0x0010;
+pub const METH_STATIC: ffi::c_int = 0x0020;
 
 /* METH_COEXIST allows a method to be entered eventhough a slot has
 already filled the entry.  When defined, the flag allows a separate
 method, "__contains__" for example, to coexist with a defined
 slot like sq_contains. */
 
-pub const METH_COEXIST: c_int = 0x0040;
+pub const METH_COEXIST: ffi::c_int = 0x0040;
 
 /* METH_FASTCALL indicates the PEP 590 Vectorcall calling format. It may
 be specified alone or with METH_KEYWORDS. */
 #[cfg(any(Py_3_10, not(Py_LIMITED_API)))]
-pub const METH_FASTCALL: c_int = 0x0080;
+pub const METH_FASTCALL: ffi::c_int = 0x0080;
 
 // skipped METH_STACKLESS
 
 #[cfg(all(Py_3_9, not(Py_LIMITED_API)))]
-pub const METH_METHOD: c_int = 0x0200;
+pub const METH_METHOD: ffi::c_int = 0x0200;
 
 extern "C" {
     #[cfg(not(Py_3_9))]
-    pub fn PyCFunction_ClearFreeList() -> c_int;
+    pub fn PyCFunction_ClearFreeList() -> ffi::c_int;
 }

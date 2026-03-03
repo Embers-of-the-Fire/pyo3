@@ -1,7 +1,7 @@
 use crate::object::*;
 #[cfg(not(GraalPy))]
 use crate::{PyCFunctionObject, PyMethodDefPointer, METH_METHOD, METH_STATIC};
-use std::ffi::c_int;
+use std::ffi;
 use std::ptr::addr_of_mut;
 
 #[cfg(not(GraalPy))]
@@ -16,12 +16,12 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PyCMethod_CheckExact(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == addr_of_mut!(PyCMethod_Type)) as c_int
+pub unsafe fn PyCMethod_CheckExact(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == addr_of_mut!(PyCMethod_Type)) as ffi::c_int
 }
 
 #[inline]
-pub unsafe fn PyCMethod_Check(op: *mut PyObject) -> c_int {
+pub unsafe fn PyCMethod_Check(op: *mut PyObject) -> ffi::c_int {
     PyObject_TypeCheck(op, addr_of_mut!(PyCMethod_Type))
 }
 
@@ -49,7 +49,7 @@ pub unsafe fn PyCFunction_GET_SELF(func: *mut PyObject) -> *mut PyObject {
 
 #[cfg(not(GraalPy))]
 #[inline]
-pub unsafe fn PyCFunction_GET_FLAGS(func: *mut PyObject) -> c_int {
+pub unsafe fn PyCFunction_GET_FLAGS(func: *mut PyObject) -> ffi::c_int {
     debug_assert_eq!(PyCMethod_Check(func), 1);
 
     let func = func.cast::<PyCFunctionObject>();

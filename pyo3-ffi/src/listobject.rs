@@ -1,6 +1,6 @@
 use crate::object::*;
 use crate::pyport::Py_ssize_t;
-use std::ffi::c_int;
+use std::ffi;
 use std::ptr::addr_of_mut;
 
 #[cfg_attr(windows, link(name = "pythonXY"))]
@@ -12,13 +12,13 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PyList_Check(op: *mut PyObject) -> c_int {
+pub unsafe fn PyList_Check(op: *mut PyObject) -> ffi::c_int {
     PyType_FastSubclass(Py_TYPE(op), Py_TPFLAGS_LIST_SUBCLASS)
 }
 
 #[inline]
-pub unsafe fn PyList_CheckExact(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == addr_of_mut!(PyList_Type)) as c_int
+pub unsafe fn PyList_CheckExact(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == addr_of_mut!(PyList_Type)) as ffi::c_int
 }
 
 extern "C" {
@@ -32,11 +32,12 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyList_GetItemRef")]
     pub fn PyList_GetItemRef(arg1: *mut PyObject, arg2: Py_ssize_t) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyList_SetItem")]
-    pub fn PyList_SetItem(arg1: *mut PyObject, arg2: Py_ssize_t, arg3: *mut PyObject) -> c_int;
+    pub fn PyList_SetItem(arg1: *mut PyObject, arg2: Py_ssize_t, arg3: *mut PyObject)
+        -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyList_Insert")]
-    pub fn PyList_Insert(arg1: *mut PyObject, arg2: Py_ssize_t, arg3: *mut PyObject) -> c_int;
+    pub fn PyList_Insert(arg1: *mut PyObject, arg2: Py_ssize_t, arg3: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyList_Append")]
-    pub fn PyList_Append(arg1: *mut PyObject, arg2: *mut PyObject) -> c_int;
+    pub fn PyList_Append(arg1: *mut PyObject, arg2: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyList_GetSlice")]
     pub fn PyList_GetSlice(
         arg1: *mut PyObject,
@@ -49,15 +50,15 @@ extern "C" {
         arg2: Py_ssize_t,
         arg3: Py_ssize_t,
         arg4: *mut PyObject,
-    ) -> c_int;
+    ) -> ffi::c_int;
     #[cfg(Py_3_13)]
-    pub fn PyList_Extend(list: *mut PyObject, iterable: *mut PyObject) -> c_int;
+    pub fn PyList_Extend(list: *mut PyObject, iterable: *mut PyObject) -> ffi::c_int;
     #[cfg(Py_3_13)]
-    pub fn PyList_Clear(list: *mut PyObject) -> c_int;
+    pub fn PyList_Clear(list: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyList_Sort")]
-    pub fn PyList_Sort(arg1: *mut PyObject) -> c_int;
+    pub fn PyList_Sort(arg1: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyList_Reverse")]
-    pub fn PyList_Reverse(arg1: *mut PyObject) -> c_int;
+    pub fn PyList_Reverse(arg1: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyList_AsTuple")]
     pub fn PyList_AsTuple(arg1: *mut PyObject) -> *mut PyObject;
 

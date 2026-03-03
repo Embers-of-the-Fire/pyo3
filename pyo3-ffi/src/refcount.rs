@@ -1,31 +1,23 @@
 use crate::pyport::Py_ssize_t;
 use crate::PyObject;
-#[cfg(all(not(Py_LIMITED_API), py_sys_config = "Py_REF_DEBUG"))]
-use std::ffi::c_char;
-#[cfg(any(Py_3_12, all(py_sys_config = "Py_REF_DEBUG", not(Py_LIMITED_API))))]
-use std::ffi::c_int;
-#[cfg(all(Py_3_14, any(not(Py_GIL_DISABLED), target_pointer_width = "32")))]
-use std::ffi::c_long;
-#[cfg(any(Py_GIL_DISABLED, all(Py_3_12, not(Py_3_14))))]
-use std::ffi::c_uint;
-#[cfg(all(Py_3_14, not(Py_GIL_DISABLED)))]
-use std::ffi::c_ulong;
+#[allow(unused_imports)]
+use std::ffi;
 use std::ptr;
 #[cfg(Py_GIL_DISABLED)]
 use std::sync::atomic::Ordering::Relaxed;
 
 #[cfg(all(Py_3_14, not(Py_3_15)))]
-const _Py_STATICALLY_ALLOCATED_FLAG: c_int = 1 << 7;
+const _Py_STATICALLY_ALLOCATED_FLAG: ffi::c_int = 1 << 7;
 #[cfg(Py_3_15)]
-pub(crate) const _Py_STATICALLY_ALLOCATED_FLAG: c_int = 1 << 2;
+pub(crate) const _Py_STATICALLY_ALLOCATED_FLAG: ffi::c_int = 1 << 2;
 
 #[cfg(all(Py_3_12, not(Py_3_14)))]
 const _Py_IMMORTAL_REFCNT: Py_ssize_t = {
     if cfg!(target_pointer_width = "64") {
-        c_uint::MAX as Py_ssize_t
+        ffi::c_uint::MAX as Py_ssize_t
     } else {
         // for 32-bit systems, use the lower 30 bits (see comment in CPython's object.h)
-        (c_uint::MAX >> 2) as Py_ssize_t
+        (ffi::c_uint::MAX >> 2) as Py_ssize_t
     }
 };
 
@@ -34,9 +26,9 @@ const _Py_IMMORTAL_REFCNT: Py_ssize_t = {
 #[cfg(all(Py_3_14, not(Py_GIL_DISABLED)))]
 const _Py_IMMORTAL_INITIAL_REFCNT: Py_ssize_t = {
     if cfg!(target_pointer_width = "64") {
-        ((3 as c_ulong) << (30 as c_ulong)) as Py_ssize_t
+        ((3 as ffi::c_ulong) << (30 as ffi::c_ulong)) as Py_ssize_t
     } else {
-        ((5 as c_long) << (28 as c_long)) as Py_ssize_t
+        ((5 as ffi::c_long) << (28 as ffi::c_long)) as Py_ssize_t
     }
 };
 
@@ -46,19 +38,20 @@ const _Py_STATIC_IMMORTAL_INITIAL_REFCNT: Py_ssize_t = {
         _Py_IMMORTAL_INITIAL_REFCNT
             | ((_Py_STATICALLY_ALLOCATED_FLAG as Py_ssize_t) << (32 as Py_ssize_t))
     } else {
-        ((7 as c_long) << (28 as c_long)) as Py_ssize_t
+        ((7 as ffi::c_long) << (28 as ffi::c_long)) as Py_ssize_t
     }
 };
 
 #[cfg(all(Py_3_14, target_pointer_width = "32"))]
-const _Py_IMMORTAL_MINIMUM_REFCNT: Py_ssize_t = ((1 as c_long) << (30 as c_long)) as Py_ssize_t;
+const _Py_IMMORTAL_MINIMUM_REFCNT: Py_ssize_t =
+    ((1 as ffi::c_long) << (30 as ffi::c_long)) as Py_ssize_t;
 
 #[cfg(all(Py_3_14, target_pointer_width = "32"))]
 const _Py_STATIC_IMMORTAL_MINIMUM_REFCNT: Py_ssize_t =
-    ((6 as c_long) << (28 as c_long)) as Py_ssize_t;
+    ((6 as ffi::c_long) << (28 as ffi::c_long)) as Py_ssize_t;
 
 #[cfg(all(Py_3_14, Py_GIL_DISABLED))]
-const _Py_IMMORTAL_INITIAL_REFCNT: Py_ssize_t = c_uint::MAX as Py_ssize_t;
+const _Py_IMMORTAL_INITIAL_REFCNT: Py_ssize_t = ffi::c_uint::MAX as Py_ssize_t;
 
 #[cfg(Py_GIL_DISABLED)]
 pub(crate) const _Py_IMMORTAL_REFCNT_LOCAL: u32 = u32::MAX;
@@ -118,28 +111,28 @@ pub unsafe fn Py_REFCNT(ob: *mut PyObject) -> Py_ssize_t {
 
 #[cfg(Py_3_12)]
 #[inline(always)]
-unsafe fn _Py_IsImmortal(op: *mut PyObject) -> c_int {
+unsafe fn _Py_IsImmortal(op: *mut PyObject) -> ffi::c_int {
     #[cfg(all(target_pointer_width = "64", not(Py_GIL_DISABLED)))]
     {
-        (((*op).ob_refcnt.ob_refcnt as crate::PY_INT32_T) < 0) as c_int
+        (((*op).ob_refcnt.ob_refcnt as crate::PY_INT32_T) < 0) as ffi::c_int
     }
 
     #[cfg(all(target_pointer_width = "32", not(Py_GIL_DISABLED)))]
     {
         #[cfg(not(Py_3_14))]
         {
-            ((*op).ob_refcnt.ob_refcnt == _Py_IMMORTAL_REFCNT) as c_int
+            ((*op).ob_refcnt.ob_refcnt == _Py_IMMORTAL_REFCNT) as ffi::c_int
         }
 
         #[cfg(Py_3_14)]
         {
-            ((*op).ob_refcnt.ob_refcnt >= _Py_IMMORTAL_MINIMUM_REFCNT) as c_int
+            ((*op).ob_refcnt.ob_refcnt >= _Py_IMMORTAL_MINIMUM_REFCNT) as ffi::c_int
         }
     }
 
     #[cfg(Py_GIL_DISABLED)]
     {
-        ((*op).ob_ref_local.load(Relaxed) == _Py_IMMORTAL_REFCNT_LOCAL) as c_int
+        ((*op).ob_ref_local.load(Relaxed) == _Py_IMMORTAL_REFCNT_LOCAL) as ffi::c_int
     }
 }
 
@@ -149,7 +142,7 @@ unsafe fn _Py_IsImmortal(op: *mut PyObject) -> c_int {
 
 extern "C" {
     #[cfg(all(py_sys_config = "Py_REF_DEBUG", not(Py_LIMITED_API)))]
-    fn _Py_NegativeRefcount(filename: *const c_char, lineno: c_int, op: *mut PyObject);
+    fn _Py_NegativeRefcount(filename: *const ffi::c_char, lineno: ffi::c_int, op: *mut PyObject);
     #[cfg(all(Py_3_12, py_sys_config = "Py_REF_DEBUG", not(Py_LIMITED_API)))]
     fn _Py_INCREF_IncRefTotal();
     #[cfg(all(Py_3_12, py_sys_config = "Py_REF_DEBUG", not(Py_LIMITED_API)))]
@@ -299,7 +292,7 @@ pub unsafe fn Py_DECREF(op: *mut PyObject) {
             #[cfg(py_sys_config = "Py_REF_DEBUG")]
             if (*op).ob_refcnt.ob_refcnt < 0 {
                 let location = std::panic::Location::caller();
-                let filename = std::ffi::CString::new(location.file()).unwrap();
+                let filename = ffi::CString::new(location.file()).unwrap();
                 _Py_NegativeRefcount(filename.as_ptr(), location.line() as i32, op);
             }
 

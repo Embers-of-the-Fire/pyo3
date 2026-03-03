@@ -1,5 +1,5 @@
 use crate::object::*;
-use std::ffi::c_int;
+use std::ffi;
 use std::ptr::addr_of_mut;
 
 #[cfg_attr(windows, link(name = "pythonXY"))]
@@ -9,8 +9,8 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PySeqIter_Check(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == addr_of_mut!(PySeqIter_Type)) as c_int
+pub unsafe fn PySeqIter_Check(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == addr_of_mut!(PySeqIter_Type)) as ffi::c_int
 }
 
 extern "C" {
@@ -19,8 +19,8 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PyCallIter_Check(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == addr_of_mut!(PyCallIter_Type)) as c_int
+pub unsafe fn PyCallIter_Check(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == addr_of_mut!(PyCallIter_Type)) as ffi::c_int
 }
 
 extern "C" {

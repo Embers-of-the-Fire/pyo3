@@ -1,7 +1,7 @@
 #[cfg(Py_3_8)]
 use crate::vectorcallfunc;
 use crate::{object, PyGetSetDef, PyMemberDef, PyMethodDef, PyObject, Py_ssize_t};
-use std::ffi::{c_char, c_int, c_uint, c_void};
+use std::ffi;
 use std::mem;
 
 // skipped private _Py_NewReference
@@ -22,26 +22,26 @@ use std::mem;
 #[cfg(not(Py_3_11))] // moved to src/buffer.rs from Python
 mod bufferinfo {
     use crate::Py_ssize_t;
-    use std::ffi::{c_char, c_int, c_void};
+    use std::ffi;
     use std::ptr;
 
     #[repr(C)]
     #[derive(Copy, Clone)]
     pub struct Py_buffer {
-        pub buf: *mut c_void,
+        pub buf: *mut ffi::c_void,
         /// Owned reference
         pub obj: *mut crate::PyObject,
         pub len: Py_ssize_t,
         pub itemsize: Py_ssize_t,
-        pub readonly: c_int,
-        pub ndim: c_int,
-        pub format: *mut c_char,
+        pub readonly: ffi::c_int,
+        pub ndim: ffi::c_int,
+        pub format: *mut ffi::c_char,
         pub shape: *mut Py_ssize_t,
         pub strides: *mut Py_ssize_t,
         pub suboffsets: *mut Py_ssize_t,
-        pub internal: *mut c_void,
+        pub internal: *mut ffi::c_void,
         #[cfg(PyPy)]
-        pub flags: c_int,
+        pub flags: ffi::c_int,
         #[cfg(PyPy)]
         pub _strides: [Py_ssize_t; PyBUF_MAX_NDIM as usize],
         #[cfg(PyPy)]
@@ -76,41 +76,41 @@ mod bufferinfo {
     pub type getbufferproc = unsafe extern "C" fn(
         arg1: *mut crate::PyObject,
         arg2: *mut Py_buffer,
-        arg3: c_int,
-    ) -> c_int;
+        arg3: ffi::c_int,
+    ) -> ffi::c_int;
     pub type releasebufferproc =
         unsafe extern "C" fn(arg1: *mut crate::PyObject, arg2: *mut Py_buffer);
 
     /// Maximum number of dimensions
-    pub const PyBUF_MAX_NDIM: c_int = if cfg!(PyPy) { 36 } else { 64 };
+    pub const PyBUF_MAX_NDIM: ffi::c_int = if cfg!(PyPy) { 36 } else { 64 };
 
     /* Flags for getting buffers */
-    pub const PyBUF_SIMPLE: c_int = 0;
-    pub const PyBUF_WRITABLE: c_int = 0x0001;
+    pub const PyBUF_SIMPLE: ffi::c_int = 0;
+    pub const PyBUF_WRITABLE: ffi::c_int = 0x0001;
     /* we used to include an E, backwards compatible alias */
-    pub const PyBUF_WRITEABLE: c_int = PyBUF_WRITABLE;
-    pub const PyBUF_FORMAT: c_int = 0x0004;
-    pub const PyBUF_ND: c_int = 0x0008;
-    pub const PyBUF_STRIDES: c_int = 0x0010 | PyBUF_ND;
-    pub const PyBUF_C_CONTIGUOUS: c_int = 0x0020 | PyBUF_STRIDES;
-    pub const PyBUF_F_CONTIGUOUS: c_int = 0x0040 | PyBUF_STRIDES;
-    pub const PyBUF_ANY_CONTIGUOUS: c_int = 0x0080 | PyBUF_STRIDES;
-    pub const PyBUF_INDIRECT: c_int = 0x0100 | PyBUF_STRIDES;
+    pub const PyBUF_WRITEABLE: ffi::c_int = PyBUF_WRITABLE;
+    pub const PyBUF_FORMAT: ffi::c_int = 0x0004;
+    pub const PyBUF_ND: ffi::c_int = 0x0008;
+    pub const PyBUF_STRIDES: ffi::c_int = 0x0010 | PyBUF_ND;
+    pub const PyBUF_C_CONTIGUOUS: ffi::c_int = 0x0020 | PyBUF_STRIDES;
+    pub const PyBUF_F_CONTIGUOUS: ffi::c_int = 0x0040 | PyBUF_STRIDES;
+    pub const PyBUF_ANY_CONTIGUOUS: ffi::c_int = 0x0080 | PyBUF_STRIDES;
+    pub const PyBUF_INDIRECT: ffi::c_int = 0x0100 | PyBUF_STRIDES;
 
-    pub const PyBUF_CONTIG: c_int = PyBUF_ND | PyBUF_WRITABLE;
-    pub const PyBUF_CONTIG_RO: c_int = PyBUF_ND;
+    pub const PyBUF_CONTIG: ffi::c_int = PyBUF_ND | PyBUF_WRITABLE;
+    pub const PyBUF_CONTIG_RO: ffi::c_int = PyBUF_ND;
 
-    pub const PyBUF_STRIDED: c_int = PyBUF_STRIDES | PyBUF_WRITABLE;
-    pub const PyBUF_STRIDED_RO: c_int = PyBUF_STRIDES;
+    pub const PyBUF_STRIDED: ffi::c_int = PyBUF_STRIDES | PyBUF_WRITABLE;
+    pub const PyBUF_STRIDED_RO: ffi::c_int = PyBUF_STRIDES;
 
-    pub const PyBUF_RECORDS: c_int = PyBUF_STRIDES | PyBUF_WRITABLE | PyBUF_FORMAT;
-    pub const PyBUF_RECORDS_RO: c_int = PyBUF_STRIDES | PyBUF_FORMAT;
+    pub const PyBUF_RECORDS: ffi::c_int = PyBUF_STRIDES | PyBUF_WRITABLE | PyBUF_FORMAT;
+    pub const PyBUF_RECORDS_RO: ffi::c_int = PyBUF_STRIDES | PyBUF_FORMAT;
 
-    pub const PyBUF_FULL: c_int = PyBUF_INDIRECT | PyBUF_WRITABLE | PyBUF_FORMAT;
-    pub const PyBUF_FULL_RO: c_int = PyBUF_INDIRECT | PyBUF_FORMAT;
+    pub const PyBUF_FULL: ffi::c_int = PyBUF_INDIRECT | PyBUF_WRITABLE | PyBUF_FORMAT;
+    pub const PyBUF_FULL_RO: ffi::c_int = PyBUF_INDIRECT | PyBUF_FORMAT;
 
-    pub const PyBUF_READ: c_int = 0x100;
-    pub const PyBUF_WRITE: c_int = 0x200;
+    pub const PyBUF_READ: ffi::c_int = 0x100;
+    pub const PyBUF_WRITE: ffi::c_int = 0x200;
 }
 
 #[cfg(not(Py_3_11))]
@@ -136,7 +136,7 @@ pub struct PyNumberMethods {
     pub nb_xor: Option<object::binaryfunc>,
     pub nb_or: Option<object::binaryfunc>,
     pub nb_int: Option<object::unaryfunc>,
-    pub nb_reserved: *mut c_void,
+    pub nb_reserved: *mut ffi::c_void,
     pub nb_float: Option<object::unaryfunc>,
     pub nb_inplace_add: Option<object::binaryfunc>,
     pub nb_inplace_subtract: Option<object::binaryfunc>,
@@ -164,9 +164,9 @@ pub struct PySequenceMethods {
     pub sq_concat: Option<object::binaryfunc>,
     pub sq_repeat: Option<object::ssizeargfunc>,
     pub sq_item: Option<object::ssizeargfunc>,
-    pub was_sq_slice: *mut c_void,
+    pub was_sq_slice: *mut ffi::c_void,
     pub sq_ass_item: Option<object::ssizeobjargproc>,
-    pub was_sq_ass_slice: *mut c_void,
+    pub was_sq_ass_slice: *mut ffi::c_void,
     pub sq_contains: Option<object::objobjproc>,
     pub sq_inplace_concat: Option<object::binaryfunc>,
     pub sq_inplace_repeat: Option<object::ssizeargfunc>,
@@ -204,14 +204,17 @@ pub struct PyBufferProcs {
     pub bf_releasebuffer: Option<crate::releasebufferproc>,
 }
 
-pub type printfunc =
-    unsafe extern "C" fn(arg1: *mut PyObject, arg2: *mut ::libc::FILE, arg3: c_int) -> c_int;
+pub type printfunc = unsafe extern "C" fn(
+    arg1: *mut PyObject,
+    arg2: *mut ::libc::FILE,
+    arg3: ffi::c_int,
+) -> ffi::c_int;
 
 #[repr(C)]
 #[derive(Debug)]
 pub struct PyTypeObject {
     pub ob_base: object::PyVarObject,
-    pub tp_name: *const c_char,
+    pub tp_name: *const ffi::c_char,
     pub tp_basicsize: Py_ssize_t,
     pub tp_itemsize: Py_ssize_t,
     pub tp_dealloc: Option<object::destructor>,
@@ -233,10 +236,10 @@ pub struct PyTypeObject {
     pub tp_setattro: Option<object::setattrofunc>,
     pub tp_as_buffer: *mut PyBufferProcs,
     #[cfg(not(Py_GIL_DISABLED))]
-    pub tp_flags: std::ffi::c_ulong,
+    pub tp_flags: ffi::c_ulong,
     #[cfg(Py_GIL_DISABLED)]
     pub tp_flags: crate::impl_::AtomicCULong,
-    pub tp_doc: *const c_char,
+    pub tp_doc: *const ffi::c_char,
     pub tp_traverse: Option<object::traverseproc>,
     pub tp_clear: Option<object::inquiry>,
     pub tp_richcompare: Option<object::richcmpfunc>,
@@ -262,12 +265,12 @@ pub struct PyTypeObject {
     pub tp_subclasses: *mut object::PyObject,
     pub tp_weaklist: *mut object::PyObject,
     pub tp_del: Option<object::destructor>,
-    pub tp_version_tag: c_uint,
+    pub tp_version_tag: ffi::c_uint,
     pub tp_finalize: Option<object::destructor>,
     #[cfg(Py_3_8)]
     pub tp_vectorcall: Option<vectorcallfunc>,
     #[cfg(Py_3_12)]
-    pub tp_watched: c_char,
+    pub tp_watched: ffi::c_char,
     #[cfg(all(not(PyPy), Py_3_8, not(Py_3_9)))]
     pub tp_print: Option<printfunc>,
     #[cfg(py_sys_config = "COUNT_ALLOCS")]
@@ -305,13 +308,13 @@ pub struct PyHeapTypeObject {
     pub ht_slots: *mut object::PyObject,
     pub ht_qualname: *mut object::PyObject,
     #[cfg(not(PyPy))]
-    pub ht_cached_keys: *mut c_void,
+    pub ht_cached_keys: *mut ffi::c_void,
     #[cfg(Py_3_9)]
     pub ht_module: *mut object::PyObject,
     #[cfg(all(Py_3_11, not(PyPy)))]
-    _ht_tpname: *mut c_char,
+    _ht_tpname: *mut ffi::c_char,
     #[cfg(Py_3_14)]
-    pub ht_token: *mut c_void,
+    pub ht_token: *mut ffi::c_void,
     #[cfg(all(Py_3_11, not(PyPy)))]
     _spec_cache: _specialization_cache,
     #[cfg(all(Py_GIL_DISABLED, Py_3_14))]
@@ -342,7 +345,8 @@ extern "C" {
     pub fn PyType_GetDict(o: *mut PyTypeObject) -> *mut PyObject;
 
     #[cfg_attr(PyPy, link_name = "PyPyObject_Print")]
-    pub fn PyObject_Print(o: *mut PyObject, fp: *mut ::libc::FILE, flags: c_int) -> c_int;
+    pub fn PyObject_Print(o: *mut PyObject, fp: *mut ::libc::FILE, flags: ffi::c_int)
+        -> ffi::c_int;
 
     // skipped private _Py_BreakPoint
     // skipped private _PyObject_Dump
@@ -352,7 +356,7 @@ extern "C" {
     // skipped private _PyObject_GetDictPtr
     pub fn PyObject_CallFinalizer(arg1: *mut PyObject);
     #[cfg_attr(PyPy, link_name = "PyPyObject_CallFinalizerFromDealloc")]
-    pub fn PyObject_CallFinalizerFromDealloc(arg1: *mut PyObject) -> c_int;
+    pub fn PyObject_CallFinalizerFromDealloc(arg1: *mut PyObject) -> ffi::c_int;
 
     // skipped private _PyObject_GenericGetAttrWithDict
     // skipped private _PyObject_GenericSetAttrWithDict
@@ -403,18 +407,18 @@ extern "C" {
 extern "C" {
     // skipped PyUnstable_Object_EnableDeferredRefcount
 
-    pub fn PyUnstable_Object_IsUniqueReferencedTemporary(obj: *mut PyObject) -> c_int;
+    pub fn PyUnstable_Object_IsUniqueReferencedTemporary(obj: *mut PyObject) -> ffi::c_int;
 
     // skipped PyUnstable_IsImmortal
 
-    pub fn PyUnstable_TryIncRef(obj: *mut PyObject) -> c_int;
+    pub fn PyUnstable_TryIncRef(obj: *mut PyObject) -> ffi::c_int;
 
-    pub fn PyUnstable_EnableTryIncRef(obj: *mut PyObject) -> c_void;
+    pub fn PyUnstable_EnableTryIncRef(obj: *mut PyObject) -> ffi::c_void;
 
-    pub fn PyUnstable_Object_IsUniquelyReferenced(op: *mut PyObject) -> c_int;
+    pub fn PyUnstable_Object_IsUniquelyReferenced(op: *mut PyObject) -> ffi::c_int;
 }
 
 #[cfg(Py_3_15)]
 extern "C" {
-    pub fn PyUnstable_SetImmortal(op: *mut PyObject) -> c_int;
+    pub fn PyUnstable_SetImmortal(op: *mut PyObject) -> ffi::c_int;
 }

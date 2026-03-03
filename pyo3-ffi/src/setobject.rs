@@ -2,7 +2,7 @@ use crate::object::*;
 #[cfg(not(any(Py_LIMITED_API, PyPy, GraalPy)))]
 use crate::pyport::Py_hash_t;
 use crate::pyport::Py_ssize_t;
-use std::ffi::c_int;
+use std::ffi;
 use std::ptr::addr_of_mut;
 
 pub const PySet_MINSIZE: usize = 8;
@@ -49,7 +49,7 @@ extern "C" {
         pos: *mut Py_ssize_t,
         key: *mut *mut PyObject,
         hash: *mut super::Py_hash_t,
-    ) -> c_int;
+    ) -> ffi::c_int;
 
     // skipped non-limited _PySet_Update
 }
@@ -70,13 +70,13 @@ extern "C" {
     pub fn PyFrozenSet_New(arg1: *mut PyObject) -> *mut PyObject;
 
     #[cfg_attr(PyPy, link_name = "PyPySet_Add")]
-    pub fn PySet_Add(set: *mut PyObject, key: *mut PyObject) -> c_int;
+    pub fn PySet_Add(set: *mut PyObject, key: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPySet_Clear")]
-    pub fn PySet_Clear(set: *mut PyObject) -> c_int;
+    pub fn PySet_Clear(set: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPySet_Contains")]
-    pub fn PySet_Contains(anyset: *mut PyObject, key: *mut PyObject) -> c_int;
+    pub fn PySet_Contains(anyset: *mut PyObject, key: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPySet_Discard")]
-    pub fn PySet_Discard(set: *mut PyObject, key: *mut PyObject) -> c_int;
+    pub fn PySet_Discard(set: *mut PyObject, key: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPySet_Pop")]
     pub fn PySet_Pop(set: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPySet_Size")]
@@ -84,63 +84,63 @@ extern "C" {
 
     #[cfg(PyPy)]
     #[link_name = "PyPyFrozenSet_CheckExact"]
-    pub fn PyFrozenSet_CheckExact(ob: *mut PyObject) -> c_int;
+    pub fn PyFrozenSet_CheckExact(ob: *mut PyObject) -> ffi::c_int;
 }
 
 #[inline]
 #[cfg(not(any(PyPy, GraalPy)))]
-pub unsafe fn PyFrozenSet_CheckExact(ob: *mut PyObject) -> c_int {
-    (Py_TYPE(ob) == addr_of_mut!(PyFrozenSet_Type)) as c_int
+pub unsafe fn PyFrozenSet_CheckExact(ob: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(ob) == addr_of_mut!(PyFrozenSet_Type)) as ffi::c_int
 }
 
 extern "C" {
     #[cfg(PyPy)]
     #[link_name = "PyPyFrozenSet_Check"]
-    pub fn PyFrozenSet_Check(ob: *mut PyObject) -> c_int;
+    pub fn PyFrozenSet_Check(ob: *mut PyObject) -> ffi::c_int;
 }
 
 #[inline]
 #[cfg(not(PyPy))]
-pub unsafe fn PyFrozenSet_Check(ob: *mut PyObject) -> c_int {
+pub unsafe fn PyFrozenSet_Check(ob: *mut PyObject) -> ffi::c_int {
     (Py_TYPE(ob) == addr_of_mut!(PyFrozenSet_Type)
-        || PyType_IsSubtype(Py_TYPE(ob), addr_of_mut!(PyFrozenSet_Type)) != 0) as c_int
+        || PyType_IsSubtype(Py_TYPE(ob), addr_of_mut!(PyFrozenSet_Type)) != 0) as ffi::c_int
 }
 
 extern "C" {
     #[cfg(PyPy)]
     #[link_name = "PyPyAnySet_CheckExact"]
-    pub fn PyAnySet_CheckExact(ob: *mut PyObject) -> c_int;
+    pub fn PyAnySet_CheckExact(ob: *mut PyObject) -> ffi::c_int;
 }
 
 #[inline]
 #[cfg(not(PyPy))]
-pub unsafe fn PyAnySet_CheckExact(ob: *mut PyObject) -> c_int {
+pub unsafe fn PyAnySet_CheckExact(ob: *mut PyObject) -> ffi::c_int {
     (Py_TYPE(ob) == addr_of_mut!(PySet_Type) || Py_TYPE(ob) == addr_of_mut!(PyFrozenSet_Type))
-        as c_int
+        as ffi::c_int
 }
 
 #[inline]
-pub unsafe fn PyAnySet_Check(ob: *mut PyObject) -> c_int {
+pub unsafe fn PyAnySet_Check(ob: *mut PyObject) -> ffi::c_int {
     (PyAnySet_CheckExact(ob) != 0
         || PyType_IsSubtype(Py_TYPE(ob), addr_of_mut!(PySet_Type)) != 0
-        || PyType_IsSubtype(Py_TYPE(ob), addr_of_mut!(PyFrozenSet_Type)) != 0) as c_int
+        || PyType_IsSubtype(Py_TYPE(ob), addr_of_mut!(PyFrozenSet_Type)) != 0) as ffi::c_int
 }
 
 #[inline]
 #[cfg(Py_3_10)]
-pub unsafe fn PySet_CheckExact(op: *mut PyObject) -> c_int {
+pub unsafe fn PySet_CheckExact(op: *mut PyObject) -> ffi::c_int {
     crate::Py_IS_TYPE(op, addr_of_mut!(PySet_Type))
 }
 
 extern "C" {
     #[cfg(PyPy)]
     #[link_name = "PyPySet_Check"]
-    pub fn PySet_Check(ob: *mut PyObject) -> c_int;
+    pub fn PySet_Check(ob: *mut PyObject) -> ffi::c_int;
 }
 
 #[inline]
 #[cfg(not(PyPy))]
-pub unsafe fn PySet_Check(ob: *mut PyObject) -> c_int {
+pub unsafe fn PySet_Check(ob: *mut PyObject) -> ffi::c_int {
     (Py_TYPE(ob) == addr_of_mut!(PySet_Type)
-        || PyType_IsSubtype(Py_TYPE(ob), addr_of_mut!(PySet_Type)) != 0) as c_int
+        || PyType_IsSubtype(Py_TYPE(ob), addr_of_mut!(PySet_Type)) != 0) as ffi::c_int
 }

@@ -1,6 +1,6 @@
 use crate::object::*;
 use crate::pyport::Py_ssize_t;
-use std::ffi::{c_char, c_int};
+use std::ffi;
 
 extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyErr_SetNone")]
@@ -8,7 +8,7 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyErr_SetObject")]
     pub fn PyErr_SetObject(arg1: *mut PyObject, arg2: *mut PyObject);
     #[cfg_attr(PyPy, link_name = "PyPyErr_SetString")]
-    pub fn PyErr_SetString(exception: *mut PyObject, string: *const c_char);
+    pub fn PyErr_SetString(exception: *mut PyObject, string: *const ffi::c_char);
     #[cfg_attr(PyPy, link_name = "PyPyErr_Occurred")]
     pub fn PyErr_Occurred() -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyErr_Clear")]
@@ -32,11 +32,11 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyErr_SetExcInfo")]
     pub fn PyErr_SetExcInfo(arg1: *mut PyObject, arg2: *mut PyObject, arg3: *mut PyObject);
     #[cfg_attr(PyPy, link_name = "PyPy_FatalError")]
-    pub fn Py_FatalError(message: *const c_char) -> !;
+    pub fn Py_FatalError(message: *const ffi::c_char) -> !;
     #[cfg_attr(PyPy, link_name = "PyPyErr_GivenExceptionMatches")]
-    pub fn PyErr_GivenExceptionMatches(arg1: *mut PyObject, arg2: *mut PyObject) -> c_int;
+    pub fn PyErr_GivenExceptionMatches(arg1: *mut PyObject, arg2: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyErr_ExceptionMatches")]
-    pub fn PyErr_ExceptionMatches(arg1: *mut PyObject) -> c_int;
+    pub fn PyErr_ExceptionMatches(arg1: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(
         Py_3_12,
         deprecated(
@@ -54,7 +54,7 @@ extern "C" {
     #[cfg(Py_3_12)]
     pub fn PyErr_SetRaisedException(exc: *mut PyObject);
     #[cfg_attr(PyPy, link_name = "PyPyException_SetTraceback")]
-    pub fn PyException_SetTraceback(arg1: *mut PyObject, arg2: *mut PyObject) -> c_int;
+    pub fn PyException_SetTraceback(arg1: *mut PyObject, arg2: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyException_GetTraceback")]
     pub fn PyException_GetTraceback(arg1: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyException_GetCause")]
@@ -72,14 +72,14 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PyExceptionClass_Check(x: *mut PyObject) -> c_int {
+pub unsafe fn PyExceptionClass_Check(x: *mut PyObject) -> ffi::c_int {
     (PyType_Check(x) != 0
         && PyType_FastSubclass(x as *mut PyTypeObject, Py_TPFLAGS_BASE_EXC_SUBCLASS) != 0)
-        as c_int
+        as ffi::c_int
 }
 
 #[inline]
-pub unsafe fn PyExceptionInstance_Check(x: *mut PyObject) -> c_int {
+pub unsafe fn PyExceptionInstance_Check(x: *mut PyObject) -> ffi::c_int {
     PyType_FastSubclass(Py_TYPE(x), Py_TPFLAGS_BASE_EXC_SUBCLASS)
 }
 
@@ -92,12 +92,12 @@ pub unsafe fn PyExceptionInstance_Class(x: *mut PyObject) -> *mut PyObject {
 // ported from cpython exception.c (line 2096)
 #[cfg(PyPy)]
 pub unsafe fn PyUnicodeDecodeError_Create(
-    encoding: *const c_char,
-    object: *const c_char,
+    encoding: *const ffi::c_char,
+    object: *const ffi::c_char,
     length: Py_ssize_t,
     start: Py_ssize_t,
     end: Py_ssize_t,
-    reason: *const c_char,
+    reason: *const ffi::c_char,
 ) -> *mut PyObject {
     crate::_PyObject_CallFunction_SizeT(
         PyExc_UnicodeDecodeError,
@@ -266,7 +266,7 @@ extern "C" {
 
 extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyErr_BadArgument")]
-    pub fn PyErr_BadArgument() -> c_int;
+    pub fn PyErr_BadArgument() -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyErr_NoMemory")]
     pub fn PyErr_NoMemory() -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyErr_SetFromErrno")]
@@ -283,10 +283,11 @@ extern "C" {
     ) -> *mut PyObject;
     pub fn PyErr_SetFromErrnoWithFilename(
         exc: *mut PyObject,
-        filename: *const c_char,
+        filename: *const ffi::c_char,
     ) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyErr_Format")]
-    pub fn PyErr_Format(exception: *mut PyObject, format: *const c_char, ...) -> *mut PyObject;
+    pub fn PyErr_Format(exception: *mut PyObject, format: *const ffi::c_char, ...)
+        -> *mut PyObject;
     pub fn PyErr_SetImportErrorSubclass(
         arg1: *mut PyObject,
         arg2: *mut PyObject,
@@ -300,65 +301,82 @@ extern "C" {
     ) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyErr_BadInternalCall")]
     pub fn PyErr_BadInternalCall();
-    pub fn _PyErr_BadInternalCall(filename: *const c_char, lineno: c_int);
+    pub fn _PyErr_BadInternalCall(filename: *const ffi::c_char, lineno: ffi::c_int);
     #[cfg_attr(PyPy, link_name = "PyPyErr_NewException")]
     pub fn PyErr_NewException(
-        name: *const c_char,
+        name: *const ffi::c_char,
         base: *mut PyObject,
         dict: *mut PyObject,
     ) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyErr_NewExceptionWithDoc")]
     pub fn PyErr_NewExceptionWithDoc(
-        name: *const c_char,
-        doc: *const c_char,
+        name: *const ffi::c_char,
+        doc: *const ffi::c_char,
         base: *mut PyObject,
         dict: *mut PyObject,
     ) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyErr_WriteUnraisable")]
     pub fn PyErr_WriteUnraisable(arg1: *mut PyObject);
     #[cfg_attr(PyPy, link_name = "PyPyErr_CheckSignals")]
-    pub fn PyErr_CheckSignals() -> c_int;
+    pub fn PyErr_CheckSignals() -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyErr_SetInterrupt")]
     pub fn PyErr_SetInterrupt();
     #[cfg(Py_3_10)]
     #[cfg_attr(PyPy, link_name = "PyPyErr_SetInterruptEx")]
-    pub fn PyErr_SetInterruptEx(signum: c_int);
+    pub fn PyErr_SetInterruptEx(signum: ffi::c_int);
     #[cfg_attr(PyPy, link_name = "PyPyErr_SyntaxLocation")]
-    pub fn PyErr_SyntaxLocation(filename: *const c_char, lineno: c_int);
+    pub fn PyErr_SyntaxLocation(filename: *const ffi::c_char, lineno: ffi::c_int);
     #[cfg_attr(PyPy, link_name = "PyPyErr_SyntaxLocationEx")]
-    pub fn PyErr_SyntaxLocationEx(filename: *const c_char, lineno: c_int, col_offset: c_int);
+    pub fn PyErr_SyntaxLocationEx(
+        filename: *const ffi::c_char,
+        lineno: ffi::c_int,
+        col_offset: ffi::c_int,
+    );
     #[cfg_attr(PyPy, link_name = "PyPyErr_ProgramText")]
-    pub fn PyErr_ProgramText(filename: *const c_char, lineno: c_int) -> *mut PyObject;
+    pub fn PyErr_ProgramText(filename: *const ffi::c_char, lineno: ffi::c_int) -> *mut PyObject;
     #[cfg(not(PyPy))]
     pub fn PyUnicodeDecodeError_Create(
-        encoding: *const c_char,
-        object: *const c_char,
+        encoding: *const ffi::c_char,
+        object: *const ffi::c_char,
         length: Py_ssize_t,
         start: Py_ssize_t,
         end: Py_ssize_t,
-        reason: *const c_char,
+        reason: *const ffi::c_char,
     ) -> *mut PyObject;
     pub fn PyUnicodeEncodeError_GetEncoding(arg1: *mut PyObject) -> *mut PyObject;
     pub fn PyUnicodeDecodeError_GetEncoding(arg1: *mut PyObject) -> *mut PyObject;
     pub fn PyUnicodeEncodeError_GetObject(arg1: *mut PyObject) -> *mut PyObject;
     pub fn PyUnicodeDecodeError_GetObject(arg1: *mut PyObject) -> *mut PyObject;
     pub fn PyUnicodeTranslateError_GetObject(arg1: *mut PyObject) -> *mut PyObject;
-    pub fn PyUnicodeEncodeError_GetStart(arg1: *mut PyObject, arg2: *mut Py_ssize_t) -> c_int;
-    pub fn PyUnicodeDecodeError_GetStart(arg1: *mut PyObject, arg2: *mut Py_ssize_t) -> c_int;
-    pub fn PyUnicodeTranslateError_GetStart(arg1: *mut PyObject, arg2: *mut Py_ssize_t) -> c_int;
-    pub fn PyUnicodeEncodeError_SetStart(arg1: *mut PyObject, arg2: Py_ssize_t) -> c_int;
-    pub fn PyUnicodeDecodeError_SetStart(arg1: *mut PyObject, arg2: Py_ssize_t) -> c_int;
-    pub fn PyUnicodeTranslateError_SetStart(arg1: *mut PyObject, arg2: Py_ssize_t) -> c_int;
-    pub fn PyUnicodeEncodeError_GetEnd(arg1: *mut PyObject, arg2: *mut Py_ssize_t) -> c_int;
-    pub fn PyUnicodeDecodeError_GetEnd(arg1: *mut PyObject, arg2: *mut Py_ssize_t) -> c_int;
-    pub fn PyUnicodeTranslateError_GetEnd(arg1: *mut PyObject, arg2: *mut Py_ssize_t) -> c_int;
-    pub fn PyUnicodeEncodeError_SetEnd(arg1: *mut PyObject, arg2: Py_ssize_t) -> c_int;
-    pub fn PyUnicodeDecodeError_SetEnd(arg1: *mut PyObject, arg2: Py_ssize_t) -> c_int;
-    pub fn PyUnicodeTranslateError_SetEnd(arg1: *mut PyObject, arg2: Py_ssize_t) -> c_int;
+    pub fn PyUnicodeEncodeError_GetStart(arg1: *mut PyObject, arg2: *mut Py_ssize_t) -> ffi::c_int;
+    pub fn PyUnicodeDecodeError_GetStart(arg1: *mut PyObject, arg2: *mut Py_ssize_t) -> ffi::c_int;
+    pub fn PyUnicodeTranslateError_GetStart(
+        arg1: *mut PyObject,
+        arg2: *mut Py_ssize_t,
+    ) -> ffi::c_int;
+    pub fn PyUnicodeEncodeError_SetStart(arg1: *mut PyObject, arg2: Py_ssize_t) -> ffi::c_int;
+    pub fn PyUnicodeDecodeError_SetStart(arg1: *mut PyObject, arg2: Py_ssize_t) -> ffi::c_int;
+    pub fn PyUnicodeTranslateError_SetStart(arg1: *mut PyObject, arg2: Py_ssize_t) -> ffi::c_int;
+    pub fn PyUnicodeEncodeError_GetEnd(arg1: *mut PyObject, arg2: *mut Py_ssize_t) -> ffi::c_int;
+    pub fn PyUnicodeDecodeError_GetEnd(arg1: *mut PyObject, arg2: *mut Py_ssize_t) -> ffi::c_int;
+    pub fn PyUnicodeTranslateError_GetEnd(arg1: *mut PyObject, arg2: *mut Py_ssize_t)
+        -> ffi::c_int;
+    pub fn PyUnicodeEncodeError_SetEnd(arg1: *mut PyObject, arg2: Py_ssize_t) -> ffi::c_int;
+    pub fn PyUnicodeDecodeError_SetEnd(arg1: *mut PyObject, arg2: Py_ssize_t) -> ffi::c_int;
+    pub fn PyUnicodeTranslateError_SetEnd(arg1: *mut PyObject, arg2: Py_ssize_t) -> ffi::c_int;
     pub fn PyUnicodeEncodeError_GetReason(arg1: *mut PyObject) -> *mut PyObject;
     pub fn PyUnicodeDecodeError_GetReason(arg1: *mut PyObject) -> *mut PyObject;
     pub fn PyUnicodeTranslateError_GetReason(arg1: *mut PyObject) -> *mut PyObject;
-    pub fn PyUnicodeEncodeError_SetReason(exc: *mut PyObject, reason: *const c_char) -> c_int;
-    pub fn PyUnicodeDecodeError_SetReason(exc: *mut PyObject, reason: *const c_char) -> c_int;
-    pub fn PyUnicodeTranslateError_SetReason(exc: *mut PyObject, reason: *const c_char) -> c_int;
+    pub fn PyUnicodeEncodeError_SetReason(
+        exc: *mut PyObject,
+        reason: *const ffi::c_char,
+    ) -> ffi::c_int;
+    pub fn PyUnicodeDecodeError_SetReason(
+        exc: *mut PyObject,
+        reason: *const ffi::c_char,
+    ) -> ffi::c_int;
+    pub fn PyUnicodeTranslateError_SetReason(
+        exc: *mut PyObject,
+        reason: *const ffi::c_char,
+    ) -> ffi::c_int;
 }

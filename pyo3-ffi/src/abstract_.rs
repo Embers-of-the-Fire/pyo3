@@ -2,14 +2,17 @@ use crate::object::*;
 use crate::pyport::Py_ssize_t;
 #[cfg(any(Py_3_12, all(Py_3_8, not(Py_LIMITED_API))))]
 use libc::size_t;
-use std::ffi::{c_char, c_int};
+use std::ffi;
 
 #[inline]
 #[cfg(all(
     not(Py_3_13), // CPython exposed as a function in 3.13, in object.h
     not(all(PyPy, not(Py_3_11))) // PyPy exposed as a function until PyPy 3.10, macro in 3.11+
 ))]
-pub unsafe fn PyObject_DelAttrString(o: *mut PyObject, attr_name: *const c_char) -> c_int {
+pub unsafe fn PyObject_DelAttrString(
+    o: *mut PyObject,
+    attr_name: *const ffi::c_char,
+) -> ffi::c_int {
     PyObject_SetAttrString(o, attr_name, std::ptr::null_mut())
 }
 
@@ -18,7 +21,7 @@ pub unsafe fn PyObject_DelAttrString(o: *mut PyObject, attr_name: *const c_char)
     not(Py_3_13), // CPython exposed as a function in 3.13, in object.h
     not(all(PyPy, not(Py_3_11))) // PyPy exposed as a function until PyPy 3.10, macro in 3.11+
 ))]
-pub unsafe fn PyObject_DelAttr(o: *mut PyObject, attr_name: *mut PyObject) -> c_int {
+pub unsafe fn PyObject_DelAttr(o: *mut PyObject, attr_name: *mut PyObject) -> ffi::c_int {
     PyObject_SetAttr(o, attr_name, std::ptr::null_mut())
 }
 
@@ -43,14 +46,14 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyObject_CallFunction")]
     pub fn PyObject_CallFunction(
         callable_object: *mut PyObject,
-        format: *const c_char,
+        format: *const ffi::c_char,
         ...
     ) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyObject_CallMethod")]
     pub fn PyObject_CallMethod(
         o: *mut PyObject,
-        method: *const c_char,
-        format: *const c_char,
+        method: *const ffi::c_char,
+        format: *const ffi::c_char,
         ...
     ) -> *mut PyObject;
 
@@ -58,15 +61,15 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "_PyPyObject_CallFunction_SizeT")]
     pub fn _PyObject_CallFunction_SizeT(
         callable_object: *mut PyObject,
-        format: *const c_char,
+        format: *const ffi::c_char,
         ...
     ) -> *mut PyObject;
     #[cfg(not(Py_3_13))]
     #[cfg_attr(PyPy, link_name = "_PyPyObject_CallMethod_SizeT")]
     pub fn _PyObject_CallMethod_SizeT(
         o: *mut PyObject,
-        method: *const c_char,
-        format: *const c_char,
+        method: *const ffi::c_char,
+        format: *const ffi::c_char,
         ...
     ) -> *mut PyObject;
 
@@ -115,11 +118,11 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyObject_GetItem")]
     pub fn PyObject_GetItem(o: *mut PyObject, key: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyObject_SetItem")]
-    pub fn PyObject_SetItem(o: *mut PyObject, key: *mut PyObject, v: *mut PyObject) -> c_int;
+    pub fn PyObject_SetItem(o: *mut PyObject, key: *mut PyObject, v: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyObject_DelItemString")]
-    pub fn PyObject_DelItemString(o: *mut PyObject, key: *const c_char) -> c_int;
+    pub fn PyObject_DelItemString(o: *mut PyObject, key: *const ffi::c_char) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyObject_DelItem")]
-    pub fn PyObject_DelItem(o: *mut PyObject, key: *mut PyObject) -> c_int;
+    pub fn PyObject_DelItem(o: *mut PyObject, key: *mut PyObject) -> ffi::c_int;
 }
 
 extern "C" {
@@ -136,18 +139,18 @@ extern "C" {
 // This is a slow implementation which should function equivalently.
 #[cfg(not(any(Py_3_8, PyPy)))]
 #[inline]
-pub unsafe fn PyIter_Check(o: *mut PyObject) -> c_int {
+pub unsafe fn PyIter_Check(o: *mut PyObject) -> ffi::c_int {
     crate::PyObject_HasAttrString(crate::Py_TYPE(o).cast(), c"__next__".as_ptr())
 }
 
 extern "C" {
     #[cfg(any(Py_3_8, PyPy))]
     #[cfg_attr(PyPy, link_name = "PyPyIter_Check")]
-    pub fn PyIter_Check(obj: *mut PyObject) -> c_int;
+    pub fn PyIter_Check(obj: *mut PyObject) -> ffi::c_int;
 
     #[cfg(Py_3_14)]
     #[cfg_attr(PyPy, link_name = "PyPyIter_NextItem")]
-    pub fn PyIter_NextItem(iter: *mut PyObject, item: *mut *mut PyObject) -> c_int;
+    pub fn PyIter_NextItem(iter: *mut PyObject, item: *mut *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyIter_Next")]
     pub fn PyIter_Next(arg1: *mut PyObject) -> *mut PyObject;
     #[cfg(all(not(PyPy), Py_3_10))]
@@ -159,7 +162,7 @@ extern "C" {
     ) -> PySendResult;
 
     #[cfg_attr(PyPy, link_name = "PyPyNumber_Check")]
-    pub fn PyNumber_Check(o: *mut PyObject) -> c_int;
+    pub fn PyNumber_Check(o: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyNumber_Add")]
     pub fn PyNumber_Add(o1: *mut PyObject, o2: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyNumber_Subtract")]
@@ -203,15 +206,15 @@ extern "C" {
 // non-limited PyTypeObject. Don't expose this since it cannot be used.
 #[cfg(not(any(Py_LIMITED_API, PyPy)))]
 #[inline]
-pub unsafe fn PyIndex_Check(o: *mut PyObject) -> c_int {
+pub unsafe fn PyIndex_Check(o: *mut PyObject) -> ffi::c_int {
     let tp_as_number = (*Py_TYPE(o)).tp_as_number;
-    (!tp_as_number.is_null() && (*tp_as_number).nb_index.is_some()) as c_int
+    (!tp_as_number.is_null() && (*tp_as_number).nb_index.is_some()) as ffi::c_int
 }
 
 extern "C" {
     #[cfg(any(all(Py_3_8, Py_LIMITED_API), PyPy))]
     #[link_name = "PyPyIndex_Check"]
-    pub fn PyIndex_Check(o: *mut PyObject) -> c_int;
+    pub fn PyIndex_Check(o: *mut PyObject) -> ffi::c_int;
 
     #[cfg_attr(PyPy, link_name = "PyPyNumber_Index")]
     pub fn PyNumber_Index(o: *mut PyObject) -> *mut PyObject;
@@ -251,10 +254,10 @@ extern "C" {
     pub fn PyNumber_InPlaceXor(o1: *mut PyObject, o2: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyNumber_InPlaceOr")]
     pub fn PyNumber_InPlaceOr(o1: *mut PyObject, o2: *mut PyObject) -> *mut PyObject;
-    pub fn PyNumber_ToBase(n: *mut PyObject, base: c_int) -> *mut PyObject;
+    pub fn PyNumber_ToBase(n: *mut PyObject, base: ffi::c_int) -> *mut PyObject;
 
     #[cfg_attr(PyPy, link_name = "PyPySequence_Check")]
-    pub fn PySequence_Check(o: *mut PyObject) -> c_int;
+    pub fn PySequence_Check(o: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPySequence_Size")]
     pub fn PySequence_Size(o: *mut PyObject) -> Py_ssize_t;
 
@@ -279,34 +282,34 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPySequence_GetSlice")]
     pub fn PySequence_GetSlice(o: *mut PyObject, i1: Py_ssize_t, i2: Py_ssize_t) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPySequence_SetItem")]
-    pub fn PySequence_SetItem(o: *mut PyObject, i: Py_ssize_t, v: *mut PyObject) -> c_int;
+    pub fn PySequence_SetItem(o: *mut PyObject, i: Py_ssize_t, v: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPySequence_DelItem")]
-    pub fn PySequence_DelItem(o: *mut PyObject, i: Py_ssize_t) -> c_int;
+    pub fn PySequence_DelItem(o: *mut PyObject, i: Py_ssize_t) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPySequence_SetSlice")]
     pub fn PySequence_SetSlice(
         o: *mut PyObject,
         i1: Py_ssize_t,
         i2: Py_ssize_t,
         v: *mut PyObject,
-    ) -> c_int;
+    ) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPySequence_DelSlice")]
-    pub fn PySequence_DelSlice(o: *mut PyObject, i1: Py_ssize_t, i2: Py_ssize_t) -> c_int;
+    pub fn PySequence_DelSlice(o: *mut PyObject, i1: Py_ssize_t, i2: Py_ssize_t) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPySequence_Tuple")]
     pub fn PySequence_Tuple(o: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPySequence_List")]
     pub fn PySequence_List(o: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPySequence_Fast")]
-    pub fn PySequence_Fast(o: *mut PyObject, m: *const c_char) -> *mut PyObject;
+    pub fn PySequence_Fast(o: *mut PyObject, m: *const ffi::c_char) -> *mut PyObject;
     // skipped PySequence_Fast_GET_SIZE
     // skipped PySequence_Fast_GET_ITEM
     // skipped PySequence_Fast_GET_ITEMS
     pub fn PySequence_Count(o: *mut PyObject, value: *mut PyObject) -> Py_ssize_t;
     #[cfg_attr(PyPy, link_name = "PyPySequence_Contains")]
-    pub fn PySequence_Contains(seq: *mut PyObject, ob: *mut PyObject) -> c_int;
+    pub fn PySequence_Contains(seq: *mut PyObject, ob: *mut PyObject) -> ffi::c_int;
 }
 
 #[inline]
-pub unsafe fn PySequence_In(o: *mut PyObject, value: *mut PyObject) -> c_int {
+pub unsafe fn PySequence_In(o: *mut PyObject, value: *mut PyObject) -> ffi::c_int {
     PySequence_Contains(o, value)
 }
 
@@ -318,7 +321,7 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPySequence_InPlaceRepeat")]
     pub fn PySequence_InPlaceRepeat(o: *mut PyObject, count: Py_ssize_t) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyMapping_Check")]
-    pub fn PyMapping_Check(o: *mut PyObject) -> c_int;
+    pub fn PyMapping_Check(o: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyMapping_Size")]
     pub fn PyMapping_Size(o: *mut PyObject) -> Py_ssize_t;
 
@@ -334,20 +337,20 @@ pub unsafe fn PyMapping_Length(o: *mut PyObject) -> Py_ssize_t {
 }
 
 #[inline]
-pub unsafe fn PyMapping_DelItemString(o: *mut PyObject, key: *mut c_char) -> c_int {
+pub unsafe fn PyMapping_DelItemString(o: *mut PyObject, key: *mut ffi::c_char) -> ffi::c_int {
     PyObject_DelItemString(o, key)
 }
 
 #[inline]
-pub unsafe fn PyMapping_DelItem(o: *mut PyObject, key: *mut PyObject) -> c_int {
+pub unsafe fn PyMapping_DelItem(o: *mut PyObject, key: *mut PyObject) -> ffi::c_int {
     PyObject_DelItem(o, key)
 }
 
 extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyMapping_HasKeyString")]
-    pub fn PyMapping_HasKeyString(o: *mut PyObject, key: *const c_char) -> c_int;
+    pub fn PyMapping_HasKeyString(o: *mut PyObject, key: *const ffi::c_char) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyMapping_HasKey")]
-    pub fn PyMapping_HasKey(o: *mut PyObject, key: *mut PyObject) -> c_int;
+    pub fn PyMapping_HasKey(o: *mut PyObject, key: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyMapping_Keys")]
     pub fn PyMapping_Keys(o: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyMapping_Values")]
@@ -355,15 +358,15 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyMapping_Items")]
     pub fn PyMapping_Items(o: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyMapping_GetItemString")]
-    pub fn PyMapping_GetItemString(o: *mut PyObject, key: *const c_char) -> *mut PyObject;
+    pub fn PyMapping_GetItemString(o: *mut PyObject, key: *const ffi::c_char) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyMapping_SetItemString")]
     pub fn PyMapping_SetItemString(
         o: *mut PyObject,
-        key: *const c_char,
+        key: *const ffi::c_char,
         value: *mut PyObject,
-    ) -> c_int;
+    ) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyObject_IsInstance")]
-    pub fn PyObject_IsInstance(object: *mut PyObject, typeorclass: *mut PyObject) -> c_int;
+    pub fn PyObject_IsInstance(object: *mut PyObject, typeorclass: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyObject_IsSubclass")]
-    pub fn PyObject_IsSubclass(object: *mut PyObject, typeorclass: *mut PyObject) -> c_int;
+    pub fn PyObject_IsSubclass(object: *mut PyObject, typeorclass: *mut PyObject) -> ffi::c_int;
 }

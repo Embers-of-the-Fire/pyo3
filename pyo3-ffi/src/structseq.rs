@@ -1,22 +1,22 @@
 use crate::object::{PyObject, PyTypeObject};
 #[cfg(not(PyPy))]
 use crate::pyport::Py_ssize_t;
-use std::ffi::{c_char, c_int};
+use std::ffi;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct PyStructSequence_Field {
-    pub name: *const c_char,
-    pub doc: *const c_char,
+    pub name: *const ffi::c_char,
+    pub doc: *const ffi::c_char,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct PyStructSequence_Desc {
-    pub name: *const c_char,
-    pub doc: *const c_char,
+    pub name: *const ffi::c_char,
+    pub doc: *const ffi::c_char,
     pub fields: *mut PyStructSequence_Field,
-    pub n_in_sequence: c_int,
+    pub n_in_sequence: ffi::c_int,
 }
 
 // skipped PyStructSequence_UnnamedField;
@@ -31,7 +31,7 @@ extern "C" {
     pub fn PyStructSequence_InitType2(
         _type: *mut PyTypeObject,
         desc: *mut PyStructSequence_Desc,
-    ) -> c_int;
+    ) -> ffi::c_int;
 
     #[cfg(not(PyPy))]
     pub fn PyStructSequence_NewType(desc: *mut PyStructSequence_Desc) -> *mut PyTypeObject;

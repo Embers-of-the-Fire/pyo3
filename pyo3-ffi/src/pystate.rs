@@ -1,16 +1,13 @@
 use crate::moduleobject::PyModuleDef;
 use crate::object::PyObject;
 use crate::pytypedefs::{PyInterpreterState, PyThreadState};
-use std::ffi::c_int;
+use std::ffi;
 
 #[cfg(any(all(Py_3_9, not(Py_LIMITED_API)), Py_3_10))]
 #[cfg(not(PyPy))]
 use crate::PyFrameObject;
 
-#[cfg(not(PyPy))]
-use std::ffi::c_long;
-
-pub const MAX_CO_EXTRA_USERS: c_int = 255;
+pub const MAX_CO_EXTRA_USERS: ffi::c_int = 255;
 
 extern "C" {
     #[cfg(not(PyPy))]
@@ -30,9 +27,9 @@ extern "C" {
     pub fn PyInterpreterState_GetID(arg1: *mut PyInterpreterState) -> i64;
 
     #[cfg_attr(PyPy, link_name = "PyPyState_AddModule")]
-    pub fn PyState_AddModule(arg1: *mut PyObject, arg2: *mut PyModuleDef) -> c_int;
+    pub fn PyState_AddModule(arg1: *mut PyObject, arg2: *mut PyModuleDef) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyState_RemoveModule")]
-    pub fn PyState_RemoveModule(arg1: *mut PyModuleDef) -> c_int;
+    pub fn PyState_RemoveModule(arg1: *mut PyModuleDef) -> ffi::c_int;
 
     #[cfg_attr(PyPy, link_name = "PyPyState_FindModule")]
     pub fn PyState_FindModule(arg1: *mut PyModuleDef) -> *mut PyObject;
@@ -59,7 +56,7 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyThreadState_GetDict")]
     pub fn PyThreadState_GetDict() -> *mut PyObject;
     #[cfg(not(PyPy))]
-    pub fn PyThreadState_SetAsyncExc(arg1: c_long, arg2: *mut PyObject) -> c_int;
+    pub fn PyThreadState_SetAsyncExc(arg1: ffi::c_long, arg2: *mut PyObject) -> ffi::c_int;
 
     #[cfg(any(all(Py_3_9, not(Py_LIMITED_API)), Py_3_10))]
     #[cfg(not(PyPy))]

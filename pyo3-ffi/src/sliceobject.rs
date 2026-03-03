@@ -1,6 +1,6 @@
 use crate::object::*;
 use crate::pyport::Py_ssize_t;
-use std::ffi::c_int;
+use std::ffi;
 use std::ptr::addr_of_mut;
 
 #[cfg_attr(windows, link(name = "pythonXY"))]
@@ -41,8 +41,8 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PySlice_Check(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == addr_of_mut!(PySlice_Type)) as c_int
+pub unsafe fn PySlice_Check(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == addr_of_mut!(PySlice_Type)) as ffi::c_int
 }
 
 extern "C" {
@@ -63,7 +63,7 @@ extern "C" {
         start: *mut Py_ssize_t,
         stop: *mut Py_ssize_t,
         step: *mut Py_ssize_t,
-    ) -> c_int;
+    ) -> ffi::c_int;
 }
 
 #[inline]
@@ -74,7 +74,7 @@ pub unsafe fn PySlice_GetIndicesEx(
     stop: *mut Py_ssize_t,
     step: *mut Py_ssize_t,
     slicelength: *mut Py_ssize_t,
-) -> c_int {
+) -> ffi::c_int {
     if PySlice_Unpack(slice, start, stop, step) < 0 {
         *slicelength = 0;
         -1
@@ -91,7 +91,7 @@ extern "C" {
         start: *mut Py_ssize_t,
         stop: *mut Py_ssize_t,
         step: *mut Py_ssize_t,
-    ) -> c_int;
+    ) -> ffi::c_int;
 
     #[cfg_attr(PyPy, link_name = "PyPySlice_AdjustIndices")]
     pub fn PySlice_AdjustIndices(

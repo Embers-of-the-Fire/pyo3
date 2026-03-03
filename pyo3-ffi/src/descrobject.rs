@@ -1,12 +1,16 @@
 use crate::methodobject::PyMethodDef;
 use crate::object::{PyObject, PyTypeObject};
 use crate::Py_ssize_t;
-use std::ffi::{c_char, c_int, c_void};
+use std::ffi;
 use std::ptr;
 
-pub type getter = unsafe extern "C" fn(slf: *mut PyObject, closure: *mut c_void) -> *mut PyObject;
-pub type setter =
-    unsafe extern "C" fn(slf: *mut PyObject, value: *mut PyObject, closure: *mut c_void) -> c_int;
+pub type getter =
+    unsafe extern "C" fn(slf: *mut PyObject, closure: *mut ffi::c_void) -> *mut PyObject;
+pub type setter = unsafe extern "C" fn(
+    slf: *mut PyObject,
+    value: *mut PyObject,
+    closure: *mut ffi::c_void,
+) -> ffi::c_int;
 
 /// Represents the [PyGetSetDef](https://docs.python.org/3/c-api/structures.html#c.PyGetSetDef)
 /// structure.
@@ -16,11 +20,11 @@ pub type setter =
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct PyGetSetDef {
-    pub name: *const c_char,
+    pub name: *const ffi::c_char,
     pub get: Option<getter>,
     pub set: Option<setter>,
-    pub doc: *const c_char,
-    pub closure: *mut c_void,
+    pub doc: *const ffi::c_char,
+    pub closure: *mut ffi::c_void,
 }
 
 impl Default for PyGetSetDef {
@@ -76,11 +80,11 @@ extern "C" {
 #[repr(C)]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct PyMemberDef {
-    pub name: *const c_char,
-    pub type_code: c_int,
+    pub name: *const ffi::c_char,
+    pub type_code: ffi::c_int,
     pub offset: Py_ssize_t,
-    pub flags: c_int,
-    pub doc: *const c_char,
+    pub flags: ffi::c_int,
+    pub doc: *const ffi::c_char,
 }
 
 impl Default for PyMemberDef {
@@ -96,38 +100,42 @@ impl Default for PyMemberDef {
 }
 
 /* Types */
-pub const Py_T_SHORT: c_int = 0;
-pub const Py_T_INT: c_int = 1;
-pub const Py_T_LONG: c_int = 2;
-pub const Py_T_FLOAT: c_int = 3;
-pub const Py_T_DOUBLE: c_int = 4;
-pub const Py_T_STRING: c_int = 5;
+pub const Py_T_SHORT: ffi::c_int = 0;
+pub const Py_T_INT: ffi::c_int = 1;
+pub const Py_T_LONG: ffi::c_int = 2;
+pub const Py_T_FLOAT: ffi::c_int = 3;
+pub const Py_T_DOUBLE: ffi::c_int = 4;
+pub const Py_T_STRING: ffi::c_int = 5;
 #[deprecated(note = "Use Py_T_OBJECT_EX instead")]
-pub const _Py_T_OBJECT: c_int = 6;
-pub const Py_T_CHAR: c_int = 7;
-pub const Py_T_BYTE: c_int = 8;
-pub const Py_T_UBYTE: c_int = 9;
-pub const Py_T_USHORT: c_int = 10;
-pub const Py_T_UINT: c_int = 11;
-pub const Py_T_ULONG: c_int = 12;
-pub const Py_T_STRING_INPLACE: c_int = 13;
-pub const Py_T_BOOL: c_int = 14;
-pub const Py_T_OBJECT_EX: c_int = 16;
-pub const Py_T_LONGLONG: c_int = 17;
-pub const Py_T_ULONGLONG: c_int = 18;
-pub const Py_T_PYSSIZET: c_int = 19;
+pub const _Py_T_OBJECT: ffi::c_int = 6;
+pub const Py_T_CHAR: ffi::c_int = 7;
+pub const Py_T_BYTE: ffi::c_int = 8;
+pub const Py_T_UBYTE: ffi::c_int = 9;
+pub const Py_T_USHORT: ffi::c_int = 10;
+pub const Py_T_UINT: ffi::c_int = 11;
+pub const Py_T_ULONG: ffi::c_int = 12;
+pub const Py_T_STRING_INPLACE: ffi::c_int = 13;
+pub const Py_T_BOOL: ffi::c_int = 14;
+pub const Py_T_OBJECT_EX: ffi::c_int = 16;
+pub const Py_T_LONGLONG: ffi::c_int = 17;
+pub const Py_T_ULONGLONG: ffi::c_int = 18;
+pub const Py_T_PYSSIZET: ffi::c_int = 19;
 #[deprecated(note = "Value is always none")]
-pub const _Py_T_NONE: c_int = 20;
+pub const _Py_T_NONE: ffi::c_int = 20;
 
 /* Flags */
-pub const Py_READONLY: c_int = 1;
+pub const Py_READONLY: ffi::c_int = 1;
 #[cfg(Py_3_10)]
-pub const Py_AUDIT_READ: c_int = 2; // Added in 3.10, harmless no-op before that
+pub const Py_AUDIT_READ: ffi::c_int = 2; // Added in 3.10, harmless no-op before that
 #[deprecated]
-pub const _Py_WRITE_RESTRICTED: c_int = 4; // Deprecated, no-op. Do not reuse the value.
-pub const Py_RELATIVE_OFFSET: c_int = 8;
+pub const _Py_WRITE_RESTRICTED: ffi::c_int = 4; // Deprecated, no-op. Do not reuse the value.
+pub const Py_RELATIVE_OFFSET: ffi::c_int = 8;
 
 extern "C" {
-    pub fn PyMember_GetOne(addr: *const c_char, l: *mut PyMemberDef) -> *mut PyObject;
-    pub fn PyMember_SetOne(addr: *mut c_char, l: *mut PyMemberDef, value: *mut PyObject) -> c_int;
+    pub fn PyMember_GetOne(addr: *const ffi::c_char, l: *mut PyMemberDef) -> *mut PyObject;
+    pub fn PyMember_SetOne(
+        addr: *mut ffi::c_char,
+        l: *mut PyMemberDef,
+        value: *mut PyObject,
+    ) -> ffi::c_int;
 }

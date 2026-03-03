@@ -1,9 +1,6 @@
 #[cfg(not(all(Py_3_11, any(PyPy, GraalPy))))]
 use libc::size_t;
-use std::ffi::c_int;
-
-#[cfg(not(any(PyPy, GraalPy)))]
-use std::ffi::c_void;
+use std::ffi;
 
 use crate::object::*;
 
@@ -19,9 +16,9 @@ extern "C" {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct PyObjectArenaAllocator {
-    pub ctx: *mut c_void,
-    pub alloc: Option<extern "C" fn(ctx: *mut c_void, size: size_t) -> *mut c_void>,
-    pub free: Option<extern "C" fn(ctx: *mut c_void, ptr: *mut c_void, size: size_t)>,
+    pub ctx: *mut ffi::c_void,
+    pub alloc: Option<extern "C" fn(ctx: *mut ffi::c_void, size: size_t) -> *mut ffi::c_void>,
+    pub free: Option<extern "C" fn(ctx: *mut ffi::c_void, ptr: *mut ffi::c_void, size: size_t)>,
 }
 
 #[cfg(not(any(PyPy, GraalPy)))]
@@ -39,17 +36,17 @@ extern "C" {
     pub fn PyObject_SetArenaAllocator(allocator: *mut PyObjectArenaAllocator);
 
     #[cfg(Py_3_9)]
-    pub fn PyObject_IS_GC(o: *mut PyObject) -> c_int;
+    pub fn PyObject_IS_GC(o: *mut PyObject) -> ffi::c_int;
 }
 
 #[inline]
 #[cfg(not(Py_3_9))]
-pub unsafe fn PyObject_IS_GC(o: *mut PyObject) -> c_int {
+pub unsafe fn PyObject_IS_GC(o: *mut PyObject) -> ffi::c_int {
     (crate::PyType_IS_GC(Py_TYPE(o)) != 0
         && match (*Py_TYPE(o)).tp_is_gc {
             Some(tp_is_gc) => tp_is_gc(o) != 0,
             None => true,
-        }) as c_int
+        }) as ffi::c_int
 }
 
 #[cfg(not(Py_3_11))]
@@ -59,8 +56,8 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PyType_SUPPORTS_WEAKREFS(t: *mut PyTypeObject) -> c_int {
-    ((*t).tp_weaklistoffset > 0) as c_int
+pub unsafe fn PyType_SUPPORTS_WEAKREFS(t: *mut PyTypeObject) -> ffi::c_int {
+    ((*t).tp_weaklistoffset > 0) as ffi::c_int
 }
 
 #[inline]

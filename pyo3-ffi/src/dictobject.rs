@@ -1,6 +1,6 @@
 use crate::object::*;
 use crate::pyport::Py_ssize_t;
-use std::ffi::{c_char, c_int};
+use std::ffi;
 use std::ptr::addr_of_mut;
 
 #[cfg_attr(windows, link(name = "pythonXY"))]
@@ -10,13 +10,13 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PyDict_Check(op: *mut PyObject) -> c_int {
+pub unsafe fn PyDict_Check(op: *mut PyObject) -> ffi::c_int {
     PyType_FastSubclass(Py_TYPE(op), Py_TPFLAGS_DICT_SUBCLASS)
 }
 
 #[inline]
-pub unsafe fn PyDict_CheckExact(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == addr_of_mut!(PyDict_Type)) as c_int
+pub unsafe fn PyDict_CheckExact(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == addr_of_mut!(PyDict_Type)) as ffi::c_int
 }
 
 extern "C" {
@@ -27,9 +27,10 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyDict_GetItemWithError")]
     pub fn PyDict_GetItemWithError(mp: *mut PyObject, key: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyDict_SetItem")]
-    pub fn PyDict_SetItem(mp: *mut PyObject, key: *mut PyObject, item: *mut PyObject) -> c_int;
+    pub fn PyDict_SetItem(mp: *mut PyObject, key: *mut PyObject, item: *mut PyObject)
+        -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyDict_DelItem")]
-    pub fn PyDict_DelItem(mp: *mut PyObject, key: *mut PyObject) -> c_int;
+    pub fn PyDict_DelItem(mp: *mut PyObject, key: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyDict_Clear")]
     pub fn PyDict_Clear(mp: *mut PyObject);
     #[cfg_attr(PyPy, link_name = "PyPyDict_Next")]
@@ -38,7 +39,7 @@ extern "C" {
         pos: *mut Py_ssize_t,
         key: *mut *mut PyObject,
         value: *mut *mut PyObject,
-    ) -> c_int;
+    ) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyDict_Keys")]
     pub fn PyDict_Keys(mp: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyDict_Values")]
@@ -50,36 +51,44 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyDict_Copy")]
     pub fn PyDict_Copy(mp: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyDict_Contains")]
-    pub fn PyDict_Contains(mp: *mut PyObject, key: *mut PyObject) -> c_int;
+    pub fn PyDict_Contains(mp: *mut PyObject, key: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyDict_Update")]
-    pub fn PyDict_Update(mp: *mut PyObject, other: *mut PyObject) -> c_int;
+    pub fn PyDict_Update(mp: *mut PyObject, other: *mut PyObject) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyDict_Merge")]
-    pub fn PyDict_Merge(mp: *mut PyObject, other: *mut PyObject, _override: c_int) -> c_int;
-    pub fn PyDict_MergeFromSeq2(d: *mut PyObject, seq2: *mut PyObject, _override: c_int) -> c_int;
+    pub fn PyDict_Merge(
+        mp: *mut PyObject,
+        other: *mut PyObject,
+        _override: ffi::c_int,
+    ) -> ffi::c_int;
+    pub fn PyDict_MergeFromSeq2(
+        d: *mut PyObject,
+        seq2: *mut PyObject,
+        _override: ffi::c_int,
+    ) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyDict_GetItemString")]
-    pub fn PyDict_GetItemString(dp: *mut PyObject, key: *const c_char) -> *mut PyObject;
+    pub fn PyDict_GetItemString(dp: *mut PyObject, key: *const ffi::c_char) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyDict_SetItemString")]
     pub fn PyDict_SetItemString(
         dp: *mut PyObject,
-        key: *const c_char,
+        key: *const ffi::c_char,
         item: *mut PyObject,
-    ) -> c_int;
+    ) -> ffi::c_int;
     #[cfg_attr(PyPy, link_name = "PyPyDict_DelItemString")]
-    pub fn PyDict_DelItemString(dp: *mut PyObject, key: *const c_char) -> c_int;
+    pub fn PyDict_DelItemString(dp: *mut PyObject, key: *const ffi::c_char) -> ffi::c_int;
     #[cfg(Py_3_13)]
     #[cfg_attr(PyPy, link_name = "PyPyDict_GetItemRef")]
     pub fn PyDict_GetItemRef(
         dp: *mut PyObject,
         key: *mut PyObject,
         result: *mut *mut PyObject,
-    ) -> c_int;
+    ) -> ffi::c_int;
     #[cfg(Py_3_13)]
     #[cfg_attr(PyPy, link_name = "PyPyDict_GetItemStringRef")]
     pub fn PyDict_GetItemStringRef(
         dp: *mut PyObject,
-        key: *const c_char,
+        key: *const ffi::c_char,
         result: *mut *mut PyObject,
-    ) -> c_int;
+    ) -> ffi::c_int;
     // skipped 3.10 / ex-non-limited PyObject_GenericGetDict
 }
 
@@ -91,23 +100,23 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PyDictKeys_Check(op: *mut PyObject) -> c_int {
+pub unsafe fn PyDictKeys_Check(op: *mut PyObject) -> ffi::c_int {
     PyObject_TypeCheck(op, addr_of_mut!(PyDictKeys_Type))
 }
 
 #[inline]
-pub unsafe fn PyDictValues_Check(op: *mut PyObject) -> c_int {
+pub unsafe fn PyDictValues_Check(op: *mut PyObject) -> ffi::c_int {
     PyObject_TypeCheck(op, addr_of_mut!(PyDictValues_Type))
 }
 
 #[inline]
-pub unsafe fn PyDictItems_Check(op: *mut PyObject) -> c_int {
+pub unsafe fn PyDictItems_Check(op: *mut PyObject) -> ffi::c_int {
     PyObject_TypeCheck(op, addr_of_mut!(PyDictItems_Type))
 }
 
 #[inline]
-pub unsafe fn PyDictViewSet_Check(op: *mut PyObject) -> c_int {
-    (PyDictKeys_Check(op) != 0 || PyDictItems_Check(op) != 0) as c_int
+pub unsafe fn PyDictViewSet_Check(op: *mut PyObject) -> ffi::c_int {
+    (PyDictKeys_Check(op) != 0 || PyDictItems_Check(op) != 0) as ffi::c_int
 }
 
 #[cfg_attr(windows, link(name = "pythonXY"))]

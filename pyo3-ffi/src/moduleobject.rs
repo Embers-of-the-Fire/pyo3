@@ -1,7 +1,7 @@
 use crate::methodobject::PyMethodDef;
 use crate::object::*;
 use crate::pyport::Py_ssize_t;
-use std::ffi::{c_char, c_int, c_void};
+use std::ffi;
 use std::ptr::addr_of_mut;
 
 #[cfg_attr(windows, link(name = "pythonXY"))]
@@ -11,29 +11,29 @@ extern "C" {
 }
 
 #[inline]
-pub unsafe fn PyModule_Check(op: *mut PyObject) -> c_int {
+pub unsafe fn PyModule_Check(op: *mut PyObject) -> ffi::c_int {
     PyObject_TypeCheck(op, addr_of_mut!(PyModule_Type))
 }
 
 #[inline]
-pub unsafe fn PyModule_CheckExact(op: *mut PyObject) -> c_int {
-    (Py_TYPE(op) == addr_of_mut!(PyModule_Type)) as c_int
+pub unsafe fn PyModule_CheckExact(op: *mut PyObject) -> ffi::c_int {
+    (Py_TYPE(op) == addr_of_mut!(PyModule_Type)) as ffi::c_int
 }
 
 extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyModule_NewObject")]
     pub fn PyModule_NewObject(name: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyModule_New")]
-    pub fn PyModule_New(name: *const c_char) -> *mut PyObject;
+    pub fn PyModule_New(name: *const ffi::c_char) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyModule_GetDict")]
     pub fn PyModule_GetDict(arg1: *mut PyObject) -> *mut PyObject;
     #[cfg(not(PyPy))]
     pub fn PyModule_GetNameObject(arg1: *mut PyObject) -> *mut PyObject;
     #[cfg_attr(PyPy, link_name = "PyPyModule_GetName")]
-    pub fn PyModule_GetName(arg1: *mut PyObject) -> *const c_char;
+    pub fn PyModule_GetName(arg1: *mut PyObject) -> *const ffi::c_char;
     #[cfg(not(all(windows, PyPy)))]
     #[deprecated(note = "Python 3.2")]
-    pub fn PyModule_GetFilename(arg1: *mut PyObject) -> *const c_char;
+    pub fn PyModule_GetFilename(arg1: *mut PyObject) -> *const ffi::c_char;
     #[cfg(not(PyPy))]
     pub fn PyModule_GetFilenameObject(arg1: *mut PyObject) -> *mut PyObject;
     // skipped non-limited _PyModule_Clear
@@ -42,7 +42,7 @@ extern "C" {
     #[cfg_attr(PyPy, link_name = "PyPyModule_GetDef")]
     pub fn PyModule_GetDef(arg1: *mut PyObject) -> *mut PyModuleDef;
     #[cfg_attr(PyPy, link_name = "PyPyModule_GetState")]
-    pub fn PyModule_GetState(arg1: *mut PyObject) -> *mut c_void;
+    pub fn PyModule_GetState(arg1: *mut PyObject) -> *mut ffi::c_void;
     #[cfg_attr(PyPy, link_name = "PyPyModuleDef_Init")]
     pub fn PyModuleDef_Init(arg1: *mut PyModuleDef) -> *mut PyObject;
 }
@@ -75,8 +75,8 @@ pub const PyModuleDef_HEAD_INIT: PyModuleDef_Base = PyModuleDef_Base {
 #[repr(C)]
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct PyModuleDef_Slot {
-    pub slot: c_int,
-    pub value: *mut c_void,
+    pub slot: ffi::c_int,
+    pub value: *mut ffi::c_void,
 }
 
 impl Default for PyModuleDef_Slot {
@@ -88,30 +88,30 @@ impl Default for PyModuleDef_Slot {
     }
 }
 
-pub const Py_mod_create: c_int = 1;
-pub const Py_mod_exec: c_int = 2;
+pub const Py_mod_create: ffi::c_int = 1;
+pub const Py_mod_exec: ffi::c_int = 2;
 #[cfg(Py_3_12)]
-pub const Py_mod_multiple_interpreters: c_int = 3;
+pub const Py_mod_multiple_interpreters: ffi::c_int = 3;
 #[cfg(Py_3_13)]
-pub const Py_mod_gil: c_int = 4;
+pub const Py_mod_gil: ffi::c_int = 4;
 #[cfg(Py_3_15)]
-pub const Py_mod_abi: c_int = 5;
+pub const Py_mod_abi: ffi::c_int = 5;
 #[cfg(Py_3_15)]
-pub const Py_mod_name: c_int = 6;
+pub const Py_mod_name: ffi::c_int = 6;
 #[cfg(Py_3_15)]
-pub const Py_mod_doc: c_int = 7;
+pub const Py_mod_doc: ffi::c_int = 7;
 #[cfg(Py_3_15)]
-pub const Py_mod_state_size: c_int = 8;
+pub const Py_mod_state_size: ffi::c_int = 8;
 #[cfg(Py_3_15)]
-pub const Py_mod_methods: c_int = 9;
+pub const Py_mod_methods: ffi::c_int = 9;
 #[cfg(Py_3_15)]
-pub const Py_mod_state_traverse: c_int = 10;
+pub const Py_mod_state_traverse: ffi::c_int = 10;
 #[cfg(Py_3_15)]
-pub const Py_mod_state_clear: c_int = 11;
+pub const Py_mod_state_clear: ffi::c_int = 11;
 #[cfg(Py_3_15)]
-pub const Py_mod_state_free: c_int = 12;
+pub const Py_mod_state_free: ffi::c_int = 12;
 #[cfg(Py_3_15)]
-pub const Py_mod_token: c_int = 13;
+pub const Py_mod_token: ffi::c_int = 13;
 
 // skipped private _Py_mod_LAST_SLOT
 
@@ -120,24 +120,24 @@ pub const Py_mod_token: c_int = 13;
     clippy::zero_ptr,
     reason = "matches the way that the rest of these constants are defined"
 )]
-pub const Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED: *mut c_void = 0 as *mut c_void;
+pub const Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED: *mut ffi::c_void = 0 as *mut ffi::c_void;
 #[cfg(Py_3_12)]
-pub const Py_MOD_MULTIPLE_INTERPRETERS_SUPPORTED: *mut c_void = 1 as *mut c_void;
+pub const Py_MOD_MULTIPLE_INTERPRETERS_SUPPORTED: *mut ffi::c_void = 1 as *mut ffi::c_void;
 #[cfg(Py_3_12)]
-pub const Py_MOD_PER_INTERPRETER_GIL_SUPPORTED: *mut c_void = 2 as *mut c_void;
+pub const Py_MOD_PER_INTERPRETER_GIL_SUPPORTED: *mut ffi::c_void = 2 as *mut ffi::c_void;
 
 #[cfg(Py_3_13)]
 #[allow(
     clippy::zero_ptr,
     reason = "matches the way that the rest of these constants are defined"
 )]
-pub const Py_MOD_GIL_USED: *mut c_void = 0 as *mut c_void;
+pub const Py_MOD_GIL_USED: *mut ffi::c_void = 0 as *mut ffi::c_void;
 #[cfg(Py_3_13)]
-pub const Py_MOD_GIL_NOT_USED: *mut c_void = 1 as *mut c_void;
+pub const Py_MOD_GIL_NOT_USED: *mut ffi::c_void = 1 as *mut ffi::c_void;
 
 #[cfg(all(not(Py_LIMITED_API), Py_GIL_DISABLED))]
 extern "C" {
-    pub fn PyUnstable_Module_SetGIL(module: *mut PyObject, gil: *mut c_void) -> c_int;
+    pub fn PyUnstable_Module_SetGIL(module: *mut PyObject, gil: *mut ffi::c_void) -> ffi::c_int;
 }
 
 #[cfg(Py_3_15)]
@@ -146,16 +146,16 @@ extern "C" {
         slots: *const PyModuleDef_Slot,
         spec: *mut PyObject,
     ) -> *mut PyObject;
-    pub fn PyModule_Exec(_mod: *mut PyObject) -> c_int;
-    pub fn PyModule_GetStateSize(_mod: *mut PyObject, result: *mut Py_ssize_t) -> c_int;
-    pub fn PyModule_GetToken(module: *mut PyObject, result: *mut *mut c_void) -> c_int;
+    pub fn PyModule_Exec(_mod: *mut PyObject) -> ffi::c_int;
+    pub fn PyModule_GetStateSize(_mod: *mut PyObject, result: *mut Py_ssize_t) -> ffi::c_int;
+    pub fn PyModule_GetToken(module: *mut PyObject, result: *mut *mut ffi::c_void) -> ffi::c_int;
 }
 
 #[repr(C)]
 pub struct PyModuleDef {
     pub m_base: PyModuleDef_Base,
-    pub m_name: *const c_char,
-    pub m_doc: *const c_char,
+    pub m_name: *const ffi::c_char,
+    pub m_doc: *const ffi::c_char,
     pub m_size: Py_ssize_t,
     pub m_methods: *mut PyMethodDef,
     pub m_slots: *mut PyModuleDef_Slot,
